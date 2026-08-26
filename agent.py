@@ -24,6 +24,8 @@ Requires: pip install ddgs
 import argparse
 import json
 import sys
+import re
+import time
 import urllib.error
 import urllib.request
 
@@ -32,6 +34,19 @@ from tools import TOOL_REGISTRY, TOOL_SCHEMAS
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MAX_ITERATIONS = 6
+
+# Ollama picks a context length from available VRAM, which on a 16GB Mac came
+# out at only 4096 tokens. That is a real problem: the system prompt plus 8
+# tool schemas is already ~1200-1400 tokens of FIXED overhead on every single
+# request, so a third of the window is gone before the user types anything.
+# One paper search returning 5 abstracts can add another ~700. Overflow drops
+# the OLDEST messages first -- which is the system prompt, i.e. exactly the
+# rules like "never do arithmetic in your head" that we depend on.
+#
+# Qwen3 supports far more than 4096 natively. 16384 is a reasonable default
+# on 16GB with an 8B model. Raise it if you have headroom, lower it if the
+# model spills into system RAM and generation crawls.
+DEFAULT_NUM_CTX = 16384
 
 BASE_PROMPT = """You are a helpful personal assistant running fully locally on the user's Mac.
 
@@ -88,19 +103,56 @@ def build_system_prompt() -> str:
     )
 
 
-def call_ollama(model: str, messages: list[dict]) -> dict:
+def estimate_tokens(text: str) -> int:
+    """Rough token estimate: ~4 chars per token for English.
+
+    Crude on purpose -- the real tokenizer lives in the model, and we only
+    need order-of-magnitude to spot when overhead is eating the window.
+    """
+    return len(text) // 4
+
+
+def context_report(system_prompt: str, messages: list[dict], num_ctx: int) -> str:
+    """Show what is actually consuming the context window."""
+    sys_t = estimate_tokens(system_prompt)
+    schema_t = estimate_tokens(json.dumps(TOOL_SCHEMAS))
+    convo_t = sum(estimate_tokens(str(m.get("content") or "")) for m in messages[1:])
+    total = sys_t + schema_t + convo_t
+    pct = (total / num_ctx * 100) if num_ctx else 0
+    return (
+        f"[context ~{total}/{num_ctx} tokens ({pct:.0f}%)]\n"
+        f"  system prompt : ~{sys_t}\n"
+        f"  {len(TOOL_SCHEMAS)} tool schemas: ~{schema_t}  (fixed cost every request)\n"
+        f"  conversation  : ~{convo_t}"
+    )
+
+
+def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX,
+                think: bool = False) -> dict:
     """One non-streaming POST to Ollama. Returns the assistant message dict.
 
     We use stream=False here (unlike v0) because tool calls arrive as a
     structured field, and reassembling them from stream chunks is fiddly.
     Correctness first; you can add streaming back for the final answer later.
     """
-    payload = json.dumps({
+    body = {
         "model": model,
         "messages": messages,
         "tools": TOOL_SCHEMAS,
         "stream": False,
-    }).encode("utf-8")
+        "options": {"num_ctx": num_ctx},
+        # Qwen3 is a HYBRID REASONING model: by default it emits a long
+        # internal <think> block before every answer. Those tokens are
+        # generated at the same speed as visible ones, so thinking can easily
+        # triple or quadruple the wall-clock time of a turn -- and in a ReAct
+        # loop you pay it on EVERY iteration, not once per user message.
+        #
+        # For tool-calling work, thinking is usually poor value: the decision
+        # "which tool do I call" rarely needs paragraphs of deliberation.
+        # Turn it back on (--think) for genuinely hard reasoning questions.
+        "think": think,
+    }
+    payload = json.dumps(body).encode("utf-8")
 
     req = urllib.request.Request(
         OLLAMA_URL,
@@ -129,11 +181,19 @@ def execute_tool(name: str, args: dict) -> str:
         return f"Error: {name} failed ({exc})"
 
 
-def run_agent(model: str, messages: list[dict], verbose: bool = True) -> None:
+def run_agent(model: str, messages: list[dict], verbose: bool = True,
+              num_ctx: int = DEFAULT_NUM_CTX, think: bool = False,
+              show_time: bool = False) -> None:
     """The ReAct loop. Mutates `messages` in place so history persists."""
     for step in range(1, MAX_ITERATIONS + 1):
         try:
-            reply = call_ollama(model, messages)
+            t0 = time.time()
+            reply = call_ollama(model, messages, num_ctx, think)
+            elapsed = time.time() - t0
+            if show_time:
+                out_chars = len(str(reply.get("content") or ""))
+                rate = (out_chars / 4) / elapsed if elapsed else 0
+                print(f"  [ollama call: {elapsed:.1f}s, ~{rate:.0f} tok/s]")
         except urllib.error.URLError:
             print("[error] Can't reach Ollama at localhost:11434. Is it running?",
                   file=sys.stderr)
@@ -148,6 +208,8 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True) -> None:
         if not tool_calls:
             # No tools requested -> this is the final answer.
             content = (reply.get("content") or "").strip()
+            # Some builds return the reasoning inline; never show it.
+            content = re.sub(r"<think>.*?</think>", "", content, flags=re.S).strip()
             print(f"agent> {content}\n" if content else "agent> [empty reply]\n")
             return
 
@@ -182,15 +244,24 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="v3 local agent: tools, file memory, papers, code execution")
     parser.add_argument("--model", default="qwen3:8b")
     parser.add_argument("--quiet", action="store_true", help="hide tool traces")
+    parser.add_argument("--ctx", type=int, default=DEFAULT_NUM_CTX,
+                        help=f"context window in tokens (default {DEFAULT_NUM_CTX}). "
+                             f"Use --ctx 4096 to reproduce Ollama's VRAM default.")
+    parser.add_argument("--think", action="store_true",
+                        help="enable Qwen3 reasoning mode (much slower)")
+    parser.add_argument("--time", action="store_true",
+                        help="print seconds per Ollama call")
     args = parser.parse_args()
 
     system_prompt = build_system_prompt()
     messages: list[dict] = [{"role": "system", "content": system_prompt}]
 
     mem_status = "loaded" if load_memory().strip() else "empty"
-    print(f"Local agent v3 — model: {args.model}  (MEMORY.md: {mem_status})")
+    print(f"Local agent v3 — model: {args.model}  ctx: {args.ctx}  (MEMORY.md: {mem_status})")
+    overhead = estimate_tokens(system_prompt) + estimate_tokens(json.dumps(TOOL_SCHEMAS))
+    print(f"Fixed overhead: ~{overhead} tokens ({overhead/args.ctx*100:.0f}% of context)")
     print(f"Tools: {', '.join(TOOL_REGISTRY)}")
-    print("Commands: /clear  /history  /memory  /exit\n")
+    print("Commands: /clear  /history  /memory  /context  /exit\n")
 
     while True:
         try:
@@ -209,6 +280,9 @@ def main() -> None:
             messages = [{"role": "system", "content": system_prompt}]
             print("[history cleared, memory reloaded]\n")
             continue
+        if user_input == "/context":
+            print(context_report(system_prompt, messages, args.ctx) + "\n")
+            continue
         if user_input == "/memory":
             mem = load_memory()
             print(f"[MEMORY.md]\n{mem}\n" if mem.strip() else "[MEMORY.md is empty]\n")
@@ -218,7 +292,8 @@ def main() -> None:
             continue
 
         messages.append({"role": "user", "content": user_input})
-        run_agent(args.model, messages, verbose=not args.quiet)
+        run_agent(args.model, messages, verbose=not args.quiet,
+                  num_ctx=args.ctx, think=args.think, show_time=args.time)
 
 
 if __name__ == "__main__":
