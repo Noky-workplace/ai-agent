@@ -34,6 +34,9 @@ from tools import TOOL_REGISTRY, TOOL_SCHEMAS
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MAX_ITERATIONS = 6
+TRIM_THRESHOLD = 0.70
+KEEP_RECENT_TOOL_RESULTS = 4
+EVICTED = "[tool result evicted to save context]"
 
 # Ollama picks a context length from available VRAM, which on a 16GB Mac came
 # out at only 4096 tokens. That is a real problem: the system prompt plus 8
@@ -49,6 +52,7 @@ MAX_ITERATIONS = 6
 DEFAULT_NUM_CTX = 16384
 
 BASE_PROMPT = """You are a helpful personal assistant running fully locally on the user's Mac.
+
 
 You have tools. Use them instead of guessing:
 - Today's date or time -> get_current_time
@@ -111,6 +115,31 @@ def estimate_tokens(text: str) -> int:
     """
     return len(text) // 4
 
+def trim_context(messages, num_ctx):
+    """Replace old tool result bodies once context crosses the threshold."""
+    budget = int(num_ctx * TRIM_THRESHOLD)
+    used = sum(estimate_tokens(str(m.get("content") or "")) for m in messages)
+    used += estimate_tokens(json.dumps(TOOL_SCHEMAS))
+    if used < budget:
+        return 0
+
+    tool_idx = [i for i, m in enumerate(messages) if m.get("role") == "tool"]
+    evictable = tool_idx[:-KEEP_RECENT_TOOL_RESULTS] if len(tool_idx) > KEEP_RECENT_TOOL_RESULTS else []
+
+    freed = 0
+    for i in evictable:
+        body = str(messages[i].get("content") or "")
+        if body == EVICTED:
+            continue
+        freed += estimate_tokens(body)
+        messages[i]["content"] = EVICTED
+        if used - freed < budget:
+            break
+    return freed
+
+freed = trim_context(messages, num_ctx)
+if freed and verbose:
+    print(f"  [trimmed ~{freed} tokens of old tool results]")
 
 def context_report(system_prompt: str, messages: list[dict], num_ctx: int) -> str:
     """Show what is actually consuming the context window."""
@@ -186,6 +215,13 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
               show_time: bool = False) -> None:
     """The ReAct loop. Mutates `messages` in place so history persists."""
     for step in range(1, MAX_ITERATIONS + 1):
+        # Trim BEFORE the request, and before the timer starts. Old tool
+        # results are the most redundant thing in the context: the assistant
+        # turn that consumed them already distilled what mattered.
+        freed = trim_context(messages, num_ctx)
+        if freed and verbose:
+            print(f"  [trimmed ~{freed} tokens of old tool results]")
+
         try:
             t0 = time.time()
             reply = call_ollama(model, messages, num_ctx, think)
