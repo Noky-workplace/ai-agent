@@ -2,3 +2,11 @@ __pycache__/
 *.pyc
 .venv/
 .DS_Store
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+
+# Personal memory — never commit to a public repo
+MEMORY.md
+notes/
