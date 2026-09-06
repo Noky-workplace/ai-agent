@@ -82,7 +82,10 @@ Rules:
 - If a tool returns an error, tell the user plainly. Do not invent the answer.
 - Never do arithmetic in your head. Write it as Python and run it.
 - If the user denies a run_python request, respect it. Do not resubmit the
-  same code. Explain in text or propose something different."""
+  same code. Explain in text or propose something different.
+  
+- Recent events, news, prices, or facts that may have changed -> web_search,
+  then fetch_url on the most relevant result if the snippet is not enough"""
 
 
 def build_system_prompt() -> str:
