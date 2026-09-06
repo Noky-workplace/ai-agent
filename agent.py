@@ -56,7 +56,8 @@ BASE_PROMPT = """You are a helpful personal assistant running fully locally on t
 
 You have tools. Use them instead of guessing:
 - Today's date or time -> get_current_time
-- Recent events, news, prices, or facts that may have changed -> web_search
+- - Recent events, news, prices, or facts that may have changed -> web_search,
+  then fetch_url on the most relevant result if the snippet is not enough
 - Papers, studies, research literature -> search_papers
 - ANY arithmetic, data processing, or code testing -> run_python
   (there is no calculator tool; write Python and print the result)
@@ -84,8 +85,7 @@ Rules:
 - If the user denies a run_python request, respect it. Do not resubmit the
   same code. Explain in text or propose something different.
   
-- Recent events, news, prices, or facts that may have changed -> web_search,
-  then fetch_url on the most relevant result if the snippet is not enough"""
+"""
 
 
 def build_system_prompt() -> str:
@@ -140,9 +140,6 @@ def trim_context(messages, num_ctx):
             break
     return freed
 
-freed = trim_context(messages, num_ctx)
-if freed and verbose:
-    print(f"  [trimmed ~{freed} tokens of old tool results]")
 
 def context_report(system_prompt: str, messages: list[dict], num_ctx: int) -> str:
     """Show what is actually consuming the context window."""
