@@ -10,3 +10,5 @@ __pycache__/
 # Personal memory — never commit to a public repo
 MEMORY.md
 notes/
+.trash/
+.agent-git/

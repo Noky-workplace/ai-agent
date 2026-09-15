@@ -18,6 +18,7 @@ and every schema costs ~50-150 tokens of context on every single turn.
 
 import datetime
 import pathlib
+from files import contain, read_text, Refused
 
 # Only files under this directory can be read. Anything else is refused.
 # This is "least privilege": the tool physically cannot do what it isn't for.
@@ -65,18 +66,12 @@ def web_search(query: str) -> str:
 def read_file(path: str) -> str:
     """Read a UTF-8 text file, but only inside the workspace directory."""
     try:
-        target = (WORKSPACE / path).resolve()
-    except Exception as exc:
-        return f"Error: bad path ({exc})"
-
-    # Path traversal guard: '../../etc/passwd' resolves outside WORKSPACE.
-    if not target.is_relative_to(WORKSPACE):
-        return f"Error: refused — {path!r} is outside the workspace."
-    if not target.is_file():
-        return f"Error: no such file: {path}"
-
-    try:
-        text = target.read_text(encoding="utf-8", errors="replace")
+        target = contain(path)
+        if not target.is_file():
+            return f"Error: no such file: {path}"
+        text = read_text(target)
+    except Refused as exc:
+        return f"Error: refused — {exc}"
     except Exception as exc:
         return f"Error: could not read file ({exc})"
 
@@ -148,16 +143,19 @@ TOOL_REGISTRY = {
 from memory import MEMORY_TOOL_REGISTRY, MEMORY_TOOL_SCHEMAS      # noqa: E402
 from research import RESEARCH_TOOL_REGISTRY, RESEARCH_TOOL_SCHEMAS  # noqa: E402
 from sandbox import SANDBOX_TOOL_REGISTRY, SANDBOX_TOOL_SCHEMAS    # noqa: E402
-from fetch import FETCH_TOOL_REGISTRY, FETCH_TOOL_SCHEMAS          # noqa: E402
+from fetch import FETCH_TOOL_REGISTRY, FETCH_TOOL_SCHEMAS           # noqa: E402
+from files import FILES_TOOL_REGISTRY, FILES_TOOL_SCHEMAS
 
 TOOL_SCHEMAS = (
     TOOL_SCHEMAS
     + MEMORY_TOOL_SCHEMAS
     + RESEARCH_TOOL_SCHEMAS
     + SANDBOX_TOOL_SCHEMAS
-    + FETCH_TOOL_REGISTRY
+    + FETCH_TOOL_SCHEMAS
+    + FILES_TOOL_SCHEMAS
 )
 TOOL_REGISTRY.update(MEMORY_TOOL_REGISTRY)
 TOOL_REGISTRY.update(RESEARCH_TOOL_REGISTRY)
 TOOL_REGISTRY.update(SANDBOX_TOOL_REGISTRY)
-TOOL_REGISTRY.update(FETCH_TOOL_REGISTRY)
+TOOL_REGISTRY.update(FETCH_TOOL_SCHEMAS)
+TOOL_REGISTRY.update(FILES_TOOL_REGISTRY)
