@@ -1,0 +1,65 @@
+;; Seatbelt profile for run_python.
+;;
+;; Deny everything, then allow only what a Python interpreter needs to start,
+;; import the stdlib and venv packages, and write inside its scratch directory.
+;;
+;; Parameters (passed with -D by sandbox.py):
+;;   TMP     the temp cwd — the only writable location
+;;   PYBASE  realpath of sys.base_prefix (the Homebrew/system Python)
+;;   PYVENV  realpath of sys.prefix (the .venv)
+;;
+;; Seatbelt fails SILENTLY: a denied open() surfaces inside Python as EPERM,
+;; with nothing in the profile telling you which rule was missing. Debug with:
+;;
+;;   log stream --predicate 'sender=="Sandbox"' --style compact
+;;
+;; run in a second terminal while the denied script executes.
+;;
+;; This profile is OS-version-sensitive. macOS 26 (Tahoe) reads sysctls that
+;; earlier versions did not, so re-test after every system update. It is also
+;; defense in depth, not a guarantee: both Codex CLI and Claude Code have
+;; shipped Seatbelt profiles with escapes (a zsh fork path, a glob/literal
+;; path confusion). Keep the human approval prompt in front of it.
+
+(version 1)
+(deny default)
+(import "bsd.sb")
+
+(define tmp    (param "TMP"))
+(define pybase (param "PYBASE"))
+(define pyvenv (param "PYVENV"))
+
+;; Python spawns subprocesses for multiprocessing and some stdlib calls.
+(allow process-exec process-fork)
+
+;; The interpreter and runtime probe hw.* and kern.* at startup.
+(allow sysctl-read)
+
+;; stat() is allowed anywhere: Python walks sys.path on every import, and
+;; metadata alone leaks little. Reading CONTENT stays restricted below.
+(allow file-read-metadata)
+
+(allow file-read*
+    (subpath "/usr") (subpath "/System") (subpath "/Library")
+    (subpath "/bin") (subpath "/sbin") (subpath "/opt/homebrew")
+    (subpath "/private/var/db/dyld")
+    (subpath pybase) (subpath pyvenv) (subpath tmp)
+    (literal "/dev/null") (literal "/dev/urandom") (literal "/dev/random"))
+
+;; Without file-map-executable, dyld cannot map shared libraries and even a
+;; trivial process crashes before running a line of Python.
+(allow file-map-executable
+    (subpath "/usr/lib") (subpath "/System") (subpath "/opt/homebrew")
+    (subpath pybase) (subpath pyvenv))
+
+;; The scratch directory is the ONLY writable location. Absolute paths
+;; elsewhere fail, which is what the temp cwd alone could never enforce.
+(allow file-write* (subpath tmp) (literal "/dev/null"))
+
+;; Broad on purpose for the first run. Narrow to specific global-names once
+;; `log stream` shows which services Python actually asks for.
+(allow mach-lookup)
+
+;; No network. The agent has fetch_url and web_search for that, both of which
+;; run outside this sandbox and go through their own guards.
+(deny network*)

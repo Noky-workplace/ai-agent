@@ -38,7 +38,7 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 MAX_ITERATIONS = 6
 TRIM_THRESHOLD = 0.70
 KEEP_RECENT_TOOL_RESULTS = 4
-EVICTED = "[tool result evicted to save context]"
+EVICTED_PREFIX = "[evicted:"
 
 # Ollama picks a context length from available VRAM, which on a 16GB Mac came
 # out at only 4096 tokens. That is a real problem: the system prompt plus 8
@@ -128,8 +128,20 @@ def estimate_tokens(text: str) -> int:
     """
     return len(text) // 4
 
+def _stub(msg: dict) -> str:
+    """One-line traceable summary of a tool result, no model call.
+
+    Keeps the tool name, size, and the first line so the model knows the
+    call happened and roughly what came back — enough to avoid re-running
+    it, not enough to reason from. Observation masking, per JetBrains'
+    'Complexity Trap' result: matches LLM summarisation at half the cost.
+    """
+    body = str(msg.get("content") or "")
+    first = body.strip().splitlines()[0][:80] if body.strip() else ""
+    return f"{EVICTED_PREFIX} {msg.get('name', '?')} — {len(body)} chars — {first}]"
+    
 def trim_context(messages, num_ctx):
-    """Replace old tool result bodies once context crosses the threshold."""
+    """Mask old tool result bodies once context crosses the threshold."""
     budget = int(num_ctx * TRIM_THRESHOLD)
     used = sum(estimate_tokens(str(m.get("content") or "")) for m in messages)
     used += estimate_tokens(json.dumps(TOOL_SCHEMAS))
@@ -142,10 +154,11 @@ def trim_context(messages, num_ctx):
     freed = 0
     for i in evictable:
         body = str(messages[i].get("content") or "")
-        if body == EVICTED:
+        if body.startswith(EVICTED_PREFIX):
             continue
-        freed += estimate_tokens(body)
-        messages[i]["content"] = EVICTED
+        stub = _stub(messages[i])
+        freed += estimate_tokens(body) - estimate_tokens(stub)
+        messages[i]["content"] = stub
         if used - freed < budget:
             break
     return freed
