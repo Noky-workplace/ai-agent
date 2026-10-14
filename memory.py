@@ -39,7 +39,6 @@ NOTES_DIR = WORKSPACE / "notes"
 # MEMORY.md is injected into EVERY request, so it costs context on every turn.
 # Cap it, or a bloated memory file will crowd out the actual conversation.
 MAX_MEMORY_CHARS = 3000
-MAX_NOTE_CHARS = 6000
 MAX_SEARCH_HITS = 8
 SNIPPET_CHARS = 160
 
