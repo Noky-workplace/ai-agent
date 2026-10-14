@@ -378,6 +378,9 @@ def format_summary(report: dict) -> str:
 # role:tool message and the next step is scored. No tool ever runs: the
 # result is fixed text from chains.jsonl, whatever the model asked for.
 #
+# A chain may start with "history": scripted earlier calls and their results,
+# for testing the reaction to a specific tool result (an error, a refusal).
+#
 # A miss ends the chain. Its later steps are "not reached" and count as
 # misses in per-step accuracy, because a model that never gets to step 2
 # hasn't shown it can do step 2.
@@ -408,6 +411,9 @@ def load_chains(path: pathlib.Path = CHAINS_FILE) -> list[dict]:
             last = i == len(steps) - 1
             if not last and "result" not in step:
                 raise ValueError(f"{path}:{lineno}: step {i + 1} needs a scripted 'result'")
+        for h in chain.get("history", []):
+            if not isinstance(h.get("call"), dict) or "name" not in h["call"] or "result" not in h:
+                raise ValueError(f"{path}:{lineno}: history entries need call.name and result")
         if chain["id"] in seen:
             raise ValueError(f"{path}:{lineno}: duplicate id {chain['id']!r}")
         seen.add(chain["id"])
@@ -422,11 +428,18 @@ def check_step(step: dict, got: str, args: dict, prev: dict | None) -> list[str]
       contains {arg: text}   the argument must contain text
       within   {arg: text}   the argument must be non-empty and appear in text
                              (edit_file's old_string copied from the file)
+      forbid   {arg: value}  the argument must NOT equal value
       forbid_repeat          fail if this call repeats the previous step's
                              tool with identical arguments (a refused call
                              retried unchanged)
+
+    "check_by_tool": {tool: {...}} adds checks that apply only when the model
+    called that tool, for steps that accept more than one.
     """
-    checks = step.get("check", {}) or {}
+    checks = dict(step.get("check", {}) or {})
+    for key, value in ((step.get("check_by_tool") or {}).get(got) or {}).items():
+        merged = dict(checks.get(key) or {}) if isinstance(value, dict) else None
+        checks[key] = {**merged, **value} if merged is not None else value
     problems = []
     for arg, value in (checks.get("equals") or {}).items():
         if args.get(arg) != value:
@@ -439,6 +452,9 @@ def check_step(step: dict, got: str, args: dict, prev: dict | None) -> list[str]
         v = args.get(arg)
         if not isinstance(v, str) or not v.strip() or v not in text:
             problems.append(f"{arg!r} is not copied from the given text")
+    for arg, value in (checks.get("forbid") or {}).items():
+        if args.get(arg) == value:
+            problems.append(f"{arg!r} must not be {value!r}")
     if checks.get("forbid_repeat") and prev and got == prev["got"] and args == prev["args"]:
         problems.append("repeated the previous call unchanged")
     return problems
@@ -458,6 +474,14 @@ def run_chains(chains: list[dict], chat, schemas: list[dict], system_prompt: str
         messages = [{"role": "system", "content": system_prompt},
                     {"role": "user", "content": chain["prompt"]}]
         steps, prev = [], None
+        # Optional scripted earlier calls, e.g. an edit that already failed,
+        # so the first scored step is the model's reaction to that result.
+        for h in chain.get("history", []):
+            args = h["call"].get("arguments", {})
+            messages.append({"role": "assistant", "content": "", "tool_calls": [
+                {"function": {"name": h["call"]["name"], "arguments": args}}]})
+            messages.append({"role": "tool", "name": h["call"]["name"], "content": h["result"]})
+            prev = {"got": h["call"]["name"], "args": args}
         for i, step in enumerate(chain["steps"]):
             accepted = [e for e in step["expect"] if e in available]
             t0 = time.perf_counter()

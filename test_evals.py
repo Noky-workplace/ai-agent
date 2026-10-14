@@ -390,6 +390,43 @@ class TestChains(unittest.TestCase):
         self.assertTrue(changed["chains"][0]["hit"])
         self.assertTrue(explained["chains"][0]["hit"])
 
+    def non_unique_edit_chain(self):
+        bad = {"path": "a.py", "old_string": "x = 1", "new_string": "x = 2"}
+        return {"id": "c13", "category": "edit_retry", "prompt": "edit",
+                "history": [{"call": {"name": "read_file", "arguments": {"path": "a.py"}},
+                             "result": "def f():\n    x = 1\n\ndef g():\n    x = 1\n"},
+                            {"call": {"name": "edit_file", "arguments": bad},
+                             "result": "Error: old_string appears 2 times"}],
+                "steps": [{"expect": ["edit_file", "read_file"],
+                           "check": {"forbid_repeat": True},
+                           "check_by_tool": {"edit_file": {"contains": {"old_string": "def f"},
+                                                           "forbid": {"replace_all": True}}},
+                           "result": "Replaced 1"},
+                          {"expect": ["none"]}]}, bad
+
+    def test_history_is_sent_before_the_first_scored_step(self):
+        chain, bad = self.non_unique_edit_chain()
+        _, model = self.run_one(chain, [tool_msg("read_file", {"path": "a.py"}), text_msg()])
+        first = model.seen[0]
+        self.assertEqual([m["role"] for m in first],
+                         ["system", "user", "assistant", "tool", "assistant", "tool"])
+        self.assertEqual(first[-1]["content"], "Error: old_string appears 2 times")
+        self.assertEqual(first[-2]["tool_calls"][0]["function"]["arguments"], bad)
+
+    def test_retry_after_non_unique_error(self):
+        chain, bad = self.non_unique_edit_chain()
+        identical, _ = self.run_one(chain, [tool_msg("edit_file", bad)])
+        everywhere, _ = self.run_one(chain, [tool_msg("edit_file", {**bad, "old_string": "def f():\n    x = 1",
+                                                                    "replace_all": True})])
+        longer, _ = self.run_one(chain, [tool_msg("edit_file", {**bad, "old_string": "def f():\n    x = 1",
+                                                                "new_string": "def f():\n    x = 2"}),
+                                         text_msg()])
+        reread, _ = self.run_one(chain, [tool_msg("read_file", {"path": "a.py"}), text_msg()])
+        self.assertFalse(identical["chains"][0]["hit"])
+        self.assertFalse(everywhere["chains"][0]["hit"])
+        self.assertTrue(longer["chains"][0]["hit"])
+        self.assertTrue(reread["chains"][0]["hit"])   # edit_file-only checks skip read_file
+
     def test_chain_skipped_when_a_step_tool_is_missing(self):
         chain = {"id": "c4", "category": "prices", "prompt": "p",
                  "steps": [{"expect": ["get_prices"], "result": "r"},
