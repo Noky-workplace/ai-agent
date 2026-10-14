@@ -1,0 +1,631 @@
+{
+  "cases": [
+    {
+      "id": "h01",
+      "category": "time",
+      "prompt": "What time is it right now?",
+      "expect": [
+        "get_current_time"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 10.617,
+          "timings": {
+            "load_s": 0.040449083000000004,
+            "prompt_tokens": 2155,
+            "prompt_s": 9.708550334,
+            "gen_tokens": 17,
+            "gen_s": 0.848010958
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h02",
+      "category": "time",
+      "prompt": "Is today a weekday?",
+      "expect": [
+        "get_current_time"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.135,
+          "timings": {
+            "load_s": 0.043416792,
+            "prompt_tokens": 2153,
+            "prompt_s": 0.235365125,
+            "gen_tokens": 17,
+            "gen_s": 0.8459524970000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h03",
+      "category": "web",
+      "prompt": "What's the newest released version of Python?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "newest released version of Python"
+          },
+          "arg_problems": [],
+          "wall_s": 1.54,
+          "timings": {
+            "load_s": 0.043301375,
+            "prompt_tokens": 2157,
+            "prompt_s": 0.218393042,
+            "gen_tokens": 25,
+            "gen_s": 1.267492998
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h04",
+      "category": "web",
+      "prompt": "How did the Hang Seng Index close yesterday?",
+      "expect": [
+        "web_search",
+        "get_prices",
+        "get_current_time"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.17,
+          "timings": {
+            "load_s": 0.042035916,
+            "prompt_tokens": 2158,
+            "prompt_s": 0.21902041700000002,
+            "gen_tokens": 17,
+            "gen_s": 0.8884237920000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h05",
+      "category": "papers",
+      "prompt": "Find the paper that introduced the ReAct prompting method.",
+      "expect": [
+        "search_papers"
+      ],
+      "answers": [
+        {
+          "got": "search_papers",
+          "args": {
+            "query": "ReAct prompting",
+            "source": "arxiv"
+          },
+          "arg_problems": [],
+          "wall_s": 1.828,
+          "timings": {
+            "load_s": 0.075898584,
+            "prompt_tokens": 2159,
+            "prompt_s": 0.21361000000000002,
+            "gen_tokens": 30,
+            "gen_s": 1.52691233
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h06",
+      "category": "papers",
+      "prompt": "Which papers on retrieval-augmented generation are cited the most?",
+      "expect": [
+        "search_papers"
+      ],
+      "answers": [
+        {
+          "got": "search_papers",
+          "args": {
+            "query": "retrieval-augmented generation",
+            "source": "semantic_scholar"
+          },
+          "arg_problems": [],
+          "wall_s": 2.175,
+          "timings": {
+            "load_s": 0.042773500000000006,
+            "prompt_tokens": 2161,
+            "prompt_s": 0.225425917,
+            "gen_tokens": 36,
+            "gen_s": 1.885860042
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h07",
+      "category": "math",
+      "prompt": "Compute 2 to the power of 64.",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "print(2 ** 64)"
+          },
+          "arg_problems": [],
+          "wall_s": 1.646,
+          "timings": {
+            "load_s": 0.042918042,
+            "prompt_tokens": 2159,
+            "prompt_s": 0.218594125,
+            "gen_tokens": 27,
+            "gen_s": 1.3718867490000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h08",
+      "category": "math",
+      "prompt": "Solve x^2 - 5x + 6 = 0.",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "import sympy as sp\n\nx = sp.symbols('x')\nequation = sp.Eq(x**2 - 5*x + 6, 0)\nsolution = sp.solve(equation, x)\nprint(solution)"
+          },
+          "arg_problems": [],
+          "wall_s": 3.97,
+          "timings": {
+            "load_s": 0.042036042,
+            "prompt_tokens": 2164,
+            "prompt_s": 0.22681895800000001,
+            "gen_tokens": 71,
+            "gen_s": 3.6801235360000004
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h09",
+      "category": "math",
+      "prompt": "What's the average of 12, 15, 9 and 30?",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "numbers = [12, 15, 9, 30]\naverage = sum(numbers) / len(numbers)\nprint(average)"
+          },
+          "arg_problems": [],
+          "wall_s": 3.1,
+          "timings": {
+            "load_s": 0.042472750000000004,
+            "prompt_tokens": 2168,
+            "prompt_s": 0.403582459,
+            "gen_tokens": 51,
+            "gen_s": 2.637466127
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h10",
+      "category": "files",
+      "prompt": "Open notes/eigenvectors.md.",
+      "expect": [
+        "read_file"
+      ],
+      "answers": [
+        {
+          "got": "read_file",
+          "args": {
+            "path": "notes/eigenvectors.md"
+          },
+          "arg_problems": [],
+          "wall_s": 1.534,
+          "timings": {
+            "load_s": 0.041408041,
+            "prompt_tokens": 2156,
+            "prompt_s": 0.220643,
+            "gen_tokens": 25,
+            "gen_s": 1.261137544
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h11",
+      "category": "files",
+      "prompt": "Which files are in the evals folder?",
+      "expect": [
+        "list_files"
+      ],
+      "answers": [
+        {
+          "got": "list_files",
+          "args": {
+            "path": "evals"
+          },
+          "arg_problems": [],
+          "wall_s": 1.324,
+          "timings": {
+            "load_s": 0.041283917,
+            "prompt_tokens": 2157,
+            "prompt_s": 0.221517083,
+            "gen_tokens": 21,
+            "gen_s": 1.0516222480000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h12",
+      "category": "edit",
+      "prompt": "Make a new file hello.py that prints hello world.",
+      "expect": [
+        "write_file"
+      ],
+      "answers": [
+        {
+          "got": "write_file",
+          "args": {
+            "path": "hello.py",
+            "content": "print('hello world')"
+          },
+          "arg_problems": [],
+          "wall_s": 1.854,
+          "timings": {
+            "load_s": 0.042739334000000004,
+            "prompt_tokens": 2159,
+            "prompt_s": 0.21907683300000003,
+            "gen_tokens": 31,
+            "gen_s": 1.5799346280000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h16",
+      "category": "memory",
+      "prompt": "Please remember that my favourite language is Python.",
+      "expect": [
+        "remember"
+      ],
+      "answers": [
+        {
+          "got": "remember",
+          "args": {
+            "fact": "My favourite language is Python."
+          },
+          "arg_problems": [],
+          "wall_s": 1.484,
+          "timings": {
+            "load_s": 0.040600709000000006,
+            "prompt_tokens": 2157,
+            "prompt_s": 0.220778042,
+            "gen_tokens": 24,
+            "gen_s": 1.211123457
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h17",
+      "category": "notes",
+      "prompt": "Store these meeting notes for later: we agreed to ship v7 on Friday and to review evals weekly.",
+      "expect": [
+        "write_note"
+      ],
+      "answers": [
+        {
+          "got": "write_note",
+          "args": {
+            "topic": "meeting notes",
+            "content": "We agreed to ship v7 on Friday and to review evals weekly."
+          },
+          "arg_problems": [],
+          "wall_s": 2.568,
+          "timings": {
+            "load_s": 0.042544834000000004,
+            "prompt_tokens": 2170,
+            "prompt_s": 0.402317833,
+            "gen_tokens": 41,
+            "gen_s": 2.108601668
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h18",
+      "category": "notes",
+      "prompt": "Have I written any notes about backtesting?",
+      "expect": [
+        "search_notes"
+      ],
+      "answers": [
+        {
+          "got": "search_notes",
+          "args": {
+            "query": "backtesting"
+          },
+          "arg_problems": [],
+          "wall_s": 1.323,
+          "timings": {
+            "load_s": 0.040351375,
+            "prompt_tokens": 2157,
+            "prompt_s": 0.221788792,
+            "gen_tokens": 21,
+            "gen_s": 1.0517954170000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h19",
+      "category": "fetch",
+      "prompt": "Summarise https://ollama.com/blog for me.",
+      "expect": [
+        "fetch_url"
+      ],
+      "answers": [
+        {
+          "got": "fetch_url",
+          "args": {
+            "url": "https://ollama.com/blog"
+          },
+          "arg_problems": [],
+          "wall_s": 1.543,
+          "timings": {
+            "load_s": 0.041566209,
+            "prompt_tokens": 2160,
+            "prompt_s": 0.22483429200000002,
+            "gen_tokens": 25,
+            "gen_s": 1.265114751
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h20",
+      "category": "no_tool",
+      "prompt": "Good night!",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.446,
+          "timings": {
+            "load_s": 0.043656917,
+            "prompt_tokens": 2151,
+            "prompt_s": 0.23167854200000002,
+            "gen_tokens": 23,
+            "gen_s": 1.160137875
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h21",
+      "category": "no_tool",
+      "prompt": "What does the acronym CPU stand for?",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.901,
+          "timings": {
+            "load_s": 0.043891625000000004,
+            "prompt_tokens": 2156,
+            "prompt_s": 0.21872516600000003,
+            "gen_tokens": 30,
+            "gen_s": 1.609568582
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "h22",
+      "category": "market",
+      "prompt": "Get weekly prices for AAPL from 2023-01-01 to 2023-12-31.",
+      "expect": [
+        "get_prices"
+      ],
+      "answers": [
+        {
+          "got": "get_prices",
+          "args": {
+            "ticker": "AAPL",
+            "interval": "1wk",
+            "start": "2023-01-01",
+            "end": "2023-12-31"
+          },
+          "arg_problems": [],
+          "wall_s": 3.545,
+          "timings": {
+            "load_s": 0.059597583,
+            "prompt_tokens": 2179,
+            "prompt_s": 0.42224933400000003,
+            "gen_tokens": 58,
+            "gen_s": 3.0434295000000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    }
+  ],
+  "skipped": [
+    "h13",
+    "h14",
+    "h15"
+  ],
+  "summary": {
+    "n": 19,
+    "runs": 1,
+    "accuracy": 1.0,
+    "strict_accuracy": 1.0,
+    "consistency": null,
+    "arg_validity": 1.0,
+    "errors": 0,
+    "by_category": {
+      "edit": 1.0,
+      "fetch": 1.0,
+      "files": 1.0,
+      "market": 1.0,
+      "math": 1.0,
+      "memory": 1.0,
+      "no_tool": 1.0,
+      "notes": 1.0,
+      "papers": 1.0,
+      "time": 1.0,
+      "web": 1.0
+    },
+    "by_expected_tool": {
+      "fetch_url": 1.0,
+      "get_current_time": 1.0,
+      "get_prices": 1.0,
+      "list_files": 1.0,
+      "none": 1.0,
+      "read_file": 1.0,
+      "remember": 1.0,
+      "run_python": 1.0,
+      "search_notes": 1.0,
+      "search_papers": 1.0,
+      "web_search": 1.0,
+      "write_file": 1.0,
+      "write_note": 1.0
+    },
+    "top_confusions": [],
+    "latency_s": {
+      "mean": 2.4054,
+      "median": 1.646,
+      "max": 10.617
+    },
+    "prompt_eval_s_median": 0.222,
+    "gen_tok_per_s_median": 19.7
+  },
+  "meta": {
+    "model": "qwen3:8b",
+    "mode": "finance",
+    "timestamp": "2026-10-15T05:38:01",
+    "num_ctx": 16384,
+    "think": false,
+    "temperature": "0",
+    "seed": 42,
+    "runs": 1,
+    "tools": [
+      "fetch_url",
+      "get_current_time",
+      "get_prices",
+      "list_files",
+      "read_file",
+      "remember",
+      "run_python",
+      "search_notes",
+      "search_papers",
+      "web_search",
+      "write_file",
+      "write_note"
+    ],
+    "cases_sha": "537c2e878d0a",
+    "prompt_sha": "fb9b9d770e51",
+    "wall_total_s": 45.7
+  }
+}

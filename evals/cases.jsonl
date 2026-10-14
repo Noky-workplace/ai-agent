@@ -35,7 +35,7 @@
 {"id": "k02", "category": "memory", "prompt": "My exam is on December 3rd, please keep that in mind.", "expect": ["remember"]}
 {"id": "k03", "category": "memory", "prompt": "I'm a TA for MATH 3332 this semester, remember that.", "expect": ["remember"]}
 {"id": "n01", "category": "notes", "prompt": "Save these lecture notes on eigenvalues: an eigenvector v of A satisfies Av = λv, and the eigenvalues are the roots of det(A - λI) = 0.", "expect": ["write_note"]}
-{"id": "n02", "category": "notes", "prompt": "Write up what we learned about context windows today and save it as a note for later.", "expect": ["write_note"], "note": "long-form content, not a fact about the user"}
+{"id": "n02", "category": "notes", "prompt": "Save a note on context windows: Ollama defaulted num_ctx to 4096 on 16GB, and evicting the system prompt broke tool selection.", "expect": ["write_note"], "note": "long-form content, not a fact about the user"}
 {"id": "n03", "category": "notes", "prompt": "What did I save about eigenvectors?", "expect": ["search_notes"]}
 {"id": "n04", "category": "notes", "prompt": "Do I have any notes on Seatbelt sandboxing?", "expect": ["search_notes"]}
 {"id": "f01", "category": "fetch", "prompt": "Read this article and summarise it: https://example.com/post", "expect": ["fetch_url"]}

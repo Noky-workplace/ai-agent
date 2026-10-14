@@ -18,12 +18,14 @@ The harness is deliberately narrow:
 
 - **Single step.** Each case scores the model's first action only: which
   tool (or none), and whether its arguments are valid.
-- **Never executes tools.** Nothing touches the network, the workspace or the
-  sandbox, so a run is safe to repeat.
+- **Never executes tools.** Nothing touches the network beyond local Ollama,
+  the workspace or the sandbox, so a run is safe to repeat.
 - **Deterministic by default.** Temperature 0, seed 42, one run. The agent itself samples at the
   model's default temperature; `--temperature model --runs 3` measures that.
 - **Results are committed** as JSON under `evals/results/`, so every number
   quoted elsewhere can be traced to a file.
+- **Never tune against `evals/holdout.jsonl`.** Run it only to confirm a
+  change that was tuned on `cases.jsonl`.
 
 ## Baseline
 

@@ -1,0 +1,22 @@
+{"id": "h01", "category": "time", "prompt": "What time is it right now?", "expect": ["get_current_time"]}
+{"id": "h02", "category": "time", "prompt": "Is today a weekday?", "expect": ["get_current_time"]}
+{"id": "h03", "category": "web", "prompt": "What's the newest released version of Python?", "expect": ["web_search"]}
+{"id": "h04", "category": "web", "prompt": "How did the Hang Seng Index close yesterday?", "expect": ["web_search", "get_prices", "get_current_time"]}
+{"id": "h05", "category": "papers", "prompt": "Find the paper that introduced the ReAct prompting method.", "expect": ["search_papers"]}
+{"id": "h06", "category": "papers", "prompt": "Which papers on retrieval-augmented generation are cited the most?", "expect": ["search_papers"]}
+{"id": "h07", "category": "math", "prompt": "Compute 2 to the power of 64.", "expect": ["run_python"]}
+{"id": "h08", "category": "math", "prompt": "Solve x^2 - 5x + 6 = 0.", "expect": ["run_python"]}
+{"id": "h09", "category": "math", "prompt": "What's the average of 12, 15, 9 and 30?", "expect": ["run_python"]}
+{"id": "h10", "category": "files", "prompt": "Open notes/eigenvectors.md.", "expect": ["read_file"]}
+{"id": "h11", "category": "files", "prompt": "Which files are in the evals folder?", "expect": ["list_files"]}
+{"id": "h12", "category": "edit", "prompt": "Make a new file hello.py that prints hello world.", "expect": ["write_file"]}
+{"id": "h13", "category": "edit", "prompt": "In config.txt, replace 'debug=true' with 'debug=false'.", "expect": ["edit_file", "read_file"]}
+{"id": "h14", "category": "edit", "prompt": "Remove the file scratch.txt.", "expect": ["delete_file"]}
+{"id": "h15", "category": "archive", "prompt": "Unpack the archive prices.zip.", "expect": ["extract_archive"]}
+{"id": "h16", "category": "memory", "prompt": "Please remember that my favourite language is Python.", "expect": ["remember"]}
+{"id": "h17", "category": "notes", "prompt": "Store these meeting notes for later: we agreed to ship v7 on Friday and to review evals weekly.", "expect": ["write_note"]}
+{"id": "h18", "category": "notes", "prompt": "Have I written any notes about backtesting?", "expect": ["search_notes"]}
+{"id": "h19", "category": "fetch", "prompt": "Summarise https://ollama.com/blog for me.", "expect": ["fetch_url"]}
+{"id": "h20", "category": "no_tool", "prompt": "Good night!", "expect": ["none"]}
+{"id": "h21", "category": "no_tool", "prompt": "What does the acronym CPU stand for?", "expect": ["none"]}
+{"id": "h22", "category": "market", "prompt": "Get weekly prices for AAPL from 2023-01-01 to 2023-12-31.", "expect": ["get_prices"]}
