@@ -352,8 +352,11 @@ def edit_file(path: str, old_string: str, new_string: str, replace_all: bool = F
         return (f"Error: old_string not found in {rel}. read_file it and copy the "
                 f"text exactly — whitespace and indentation must match.")
     if count > 1 and not replace_all:
-        return (f"Error: old_string appears {count} times in {rel}. Include more "
-                f"surrounding lines to make it unique, or set replace_all=true.")
+        # Widening old_string comes first: offering replace_all as an equal
+        # option led qwen3:8b to rewrite every match (eval chain c13).
+        return (f"Error: old_string appears {count} times in {rel}. Copy more "
+                f"surrounding lines from read_file so it matches exactly one place. "
+                f"Use replace_all=true only if every occurrence should change.")
 
     new = old.replace(old_string, new_string) if replace_all else old.replace(old_string, new_string, 1)
     if new == old:

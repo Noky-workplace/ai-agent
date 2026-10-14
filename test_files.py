@@ -176,6 +176,8 @@ class TestEditFile(WorkspaceTest):
         with self.approve(), self.no_checkpoint():
             out = files.edit_file("a.py", "v = 0", "v = 1")
         self.assertIn("2 times", out)
+        self.assertIn("matches exactly one place", out)
+        self.assertIn("only if every occurrence should change", out)
         self.assertEqual((self.ws / "a.py").read_text(), "v = 0\nv = 0\n")
 
     def test_replace_all_reports_real_count(self):

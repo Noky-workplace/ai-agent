@@ -541,7 +541,8 @@ def summarise_chains(records: list[dict]) -> dict:
         by_cat[r["category"]].append(r["hit"])
         if not r["hit"]:
             last = r["steps"][-1]
-            failed_at[f"step {last['step']}: {'/'.join(last['expect'])} -> {last['got']}"] += 1
+            why = f" ({last['check_problems'][0]})" if last["check_problems"] else ""
+            failed_at[f"step {last['step']}: {'/'.join(last['expect'])} -> {last['got']}{why}"] += 1
     all_steps = [s for r in records for s in r["steps"]]
     return {
         "n": n,

@@ -1,0 +1,18 @@
+{"id": "z01", "category": "time", "prompt": "今日幾號？", "expect": ["get_current_time"]}
+{"id": "z02", "category": "web", "prompt": "幫我搵下最新嘅 Ollama 消息", "expect": ["web_search"]}
+{"id": "z03", "category": "math", "prompt": "計一下 123 乘 456", "expect": ["run_python"]}
+{"id": "z04", "category": "memory", "prompt": "記住我鍾意用繁體中文回答", "expect": ["remember"]}
+{"id": "z05", "category": "notes", "prompt": "幫我儲存呢段筆記：特徵值係 det(A - λI) = 0 嘅根", "expect": ["write_note"]}
+{"id": "z06", "category": "notes", "prompt": "我之前有冇寫過關於回測嘅筆記？", "expect": ["search_notes"]}
+{"id": "z07", "category": "files", "prompt": "打開 README.md 睇下", "expect": ["read_file"]}
+{"id": "z08", "category": "papers", "prompt": "搵下關於 transformer 注意力機制嘅論文", "expect": ["search_papers"]}
+{"id": "z09", "category": "market", "prompt": "下載騰訊 0700.HK 2024 年嘅股價", "expect": ["get_prices"]}
+{"id": "z10", "category": "no_tool", "prompt": "你好！", "expect": ["none"]}
+{"id": "y01", "category": "web", "prompt": "What's the population of Hong Kong?", "expect": ["web_search"], "note": "changes over time; the prompt says search"}
+{"id": "y02", "category": "papers", "prompt": "Look up the 2017 'Attention Is All You Need' paper and tell me its main idea.", "expect": ["search_papers", "web_search", "fetch_url"]}
+{"id": "y03", "category": "math", "prompt": "How many seconds are in a leap year?", "expect": ["run_python"]}
+{"id": "y04", "category": "memory", "prompt": "Note down that my tutorial is every Tuesday at 3pm.", "expect": ["remember"], "note": "a lasting fact about the user despite the word 'note'"}
+{"id": "y05", "category": "edit", "prompt": "Add a line 'v8: chains' to the end of CHANGELOG.md.", "expect": ["read_file", "edit_file"], "note": "write_file would overwrite the file"}
+{"id": "y06", "category": "notes", "prompt": "Is there anything in my notes folder at all?", "expect": ["search_notes", "list_files"]}
+{"id": "y07", "category": "fetch", "prompt": "Check whether https://example.com is up.", "expect": ["fetch_url"]}
+{"id": "y08", "category": "no_tool", "prompt": "Explain the difference between TCP and UDP.", "expect": ["none"]}

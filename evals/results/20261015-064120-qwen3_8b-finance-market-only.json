@@ -1,0 +1,180 @@
+{
+  "cases": [
+    {
+      "id": "q01",
+      "category": "market",
+      "prompt": "Get daily prices for 0700.HK for 2024.",
+      "expect": [
+        "get_prices"
+      ],
+      "answers": [
+        {
+          "got": "get_prices",
+          "args": {
+            "start": "2024-01-01",
+            "end": "2024-12-31",
+            "interval": "1d",
+            "ticker": "0700.HK"
+          },
+          "arg_problems": [],
+          "wall_s": 3.532,
+          "timings": {
+            "load_s": 0.041180167000000004,
+            "prompt_tokens": 1989,
+            "prompt_s": 0.22655708300000002,
+            "gen_tokens": 62,
+            "gen_s": 3.236789162
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "q02",
+      "category": "market",
+      "prompt": "Backtest a 20/50-day moving average crossover on AAPL over the last 3 years.",
+      "expect": [
+        "get_prices",
+        "get_current_time"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.447,
+          "timings": {
+            "load_s": 0.0422055,
+            "prompt_tokens": 1994,
+            "prompt_s": 0.48863091700000005,
+            "gen_tokens": 17,
+            "gen_s": 0.907648624
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "q03",
+      "category": "market",
+      "prompt": "Download Hang Seng Index history since 2020.",
+      "expect": [
+        "get_prices"
+      ],
+      "answers": [
+        {
+          "got": "get_prices",
+          "args": {
+            "ticker": "^HSI",
+            "start": "2020-01-01",
+            "end": "2025-12-31",
+            "interval": "1d"
+          },
+          "arg_problems": [],
+          "wall_s": 3.568,
+          "timings": {
+            "load_s": 0.043872958000000004,
+            "prompt_tokens": 1984,
+            "prompt_s": 0.283770542,
+            "gen_tokens": 58,
+            "gen_s": 3.2217094210000004
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "q04",
+      "category": "market",
+      "prompt": "What was Tencent's closing price on its last trading day of 2023?",
+      "expect": [
+        "get_prices",
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.26,
+          "timings": {
+            "load_s": 0.041214125000000004,
+            "prompt_tokens": 1989,
+            "prompt_s": 0.299757125,
+            "gen_tokens": 17,
+            "gen_s": 0.9108128310000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 0.0,
+      "hit": false,
+      "consistent": true
+    }
+  ],
+  "skipped": [],
+  "summary": {
+    "n": 4,
+    "runs": 1,
+    "accuracy": 0.75,
+    "strict_accuracy": 0.75,
+    "consistency": null,
+    "arg_validity": 1.0,
+    "errors": 0,
+    "by_category": {
+      "market": 0.75
+    },
+    "by_expected_tool": {
+      "get_prices": 0.75
+    },
+    "top_confusions": [
+      [
+        "get_prices -> get_current_time",
+        1
+      ]
+    ],
+    "latency_s": {
+      "mean": 2.4518,
+      "median": 2.49,
+      "max": 3.568
+    },
+    "prompt_eval_s_median": 0.292,
+    "gen_tok_per_s_median": 18.7
+  },
+  "meta": {
+    "model": "qwen3:8b",
+    "mode": "finance",
+    "timestamp": "2026-10-15T06:41:20",
+    "num_ctx": 16384,
+    "think": false,
+    "temperature": "0",
+    "seed": 42,
+    "runs": 1,
+    "tools": [
+      "fetch_url",
+      "get_current_time",
+      "get_prices",
+      "list_files",
+      "read_file",
+      "remember",
+      "run_python",
+      "search_notes",
+      "search_papers",
+      "web_search",
+      "write_file",
+      "write_note"
+    ],
+    "cases_sha": "17fe19951993",
+    "prompt_sha": "78e9b980ee45",
+    "wall_total_s": 9.8
+  }
+}
