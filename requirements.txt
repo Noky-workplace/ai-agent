@@ -5,3 +5,4 @@ lxml==6.1.3
 primp==2.0.0
 soupsieve==2.9.2
 typing_extensions==4.16.0
+yfinance  # optional: finance mode's get_prices; market.py imports it lazily

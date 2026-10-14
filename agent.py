@@ -31,6 +31,7 @@ import urllib.request
 
 from memory import load_memory
 import files
+import modes
 from tools import TOOL_REGISTRY, TOOL_SCHEMAS
 import readline  # noqa: F401 — enables arrow-key history in input()
 
@@ -140,11 +141,11 @@ def _stub(msg: dict) -> str:
     first = body.strip().splitlines()[0][:80] if body.strip() else ""
     return f"{EVICTED_PREFIX} {msg.get('name', '?')} — {len(body)} chars — {first}]"
     
-def trim_context(messages, num_ctx):
+def trim_context(messages, num_ctx, schemas=TOOL_SCHEMAS):
     """Mask old tool result bodies once context crosses the threshold."""
     budget = int(num_ctx * TRIM_THRESHOLD)
     used = sum(estimate_tokens(str(m.get("content") or "")) for m in messages)
-    used += estimate_tokens(json.dumps(TOOL_SCHEMAS))
+    used += estimate_tokens(json.dumps(schemas))
     if used < budget:
         return 0
 
@@ -164,23 +165,24 @@ def trim_context(messages, num_ctx):
     return freed
 
 
-def context_report(system_prompt: str, messages: list[dict], num_ctx: int) -> str:
+def context_report(system_prompt: str, messages: list[dict], num_ctx: int,
+                   schemas: list = TOOL_SCHEMAS) -> str:
     """Show what is actually consuming the context window."""
     sys_t = estimate_tokens(system_prompt)
-    schema_t = estimate_tokens(json.dumps(TOOL_SCHEMAS))
+    schema_t = estimate_tokens(json.dumps(schemas))
     convo_t = sum(estimate_tokens(str(m.get("content") or "")) for m in messages[1:])
     total = sys_t + schema_t + convo_t
     pct = (total / num_ctx * 100) if num_ctx else 0
     return (
         f"[context ~{total}/{num_ctx} tokens ({pct:.0f}%)]\n"
         f"  system prompt : ~{sys_t}\n"
-        f"  {len(TOOL_SCHEMAS)} tool schemas: ~{schema_t}  (fixed cost every request)\n"
+        f"  {len(schemas)} tool schemas: ~{schema_t}  (fixed cost every request)\n"
         f"  conversation  : ~{convo_t}"
     )
 
 
 def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX,
-                think: bool = False) -> dict:
+                think: bool = False, schemas: list = TOOL_SCHEMAS) -> dict:
     """One non-streaming POST to Ollama. Returns the assistant message dict.
 
     We use stream=False here (unlike v0) because tool calls arrive as a
@@ -190,7 +192,7 @@ def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX
     body = {
         "model": model,
         "messages": messages,
-        "tools": TOOL_SCHEMAS,
+        "tools": schemas,
         "stream": False,
         "options": {"num_ctx": num_ctx},
         # Qwen3 is a HYBRID REASONING model: by default it emits a long
@@ -217,12 +219,16 @@ def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX
     return body.get("message", {})
 
 
-def execute_tool(name: str, args: dict) -> str:
-    """Dispatch a model-requested tool call. Never trusts the model blindly."""
-    func = TOOL_REGISTRY.get(name)
+def execute_tool(name: str, args: dict, registry: dict = TOOL_REGISTRY) -> str:
+    """Dispatch a model-requested tool call. Never trusts the model blindly.
+
+    `registry` must be the current mode's, not the global one: a model that
+    names a tool its mode hides would otherwise get it executed.
+    """
+    func = registry.get(name)
     if func is None:
         # Models sometimes hallucinate tool names. Tell it, don't crash.
-        return f"Error: no tool named {name!r}. Available: {', '.join(TOOL_REGISTRY)}"
+        return f"Error: no tool named {name!r}. Available: {', '.join(registry)}"
     if not isinstance(args, dict):
         return f"Error: arguments for {name} must be an object."
     try:
@@ -235,19 +241,24 @@ def execute_tool(name: str, args: dict) -> str:
 
 def run_agent(model: str, messages: list[dict], verbose: bool = True,
               num_ctx: int = DEFAULT_NUM_CTX, think: bool = False,
-              show_time: bool = False) -> None:
-    """The ReAct loop. Mutates `messages` in place so history persists."""
+              show_time: bool = False, schemas: list = TOOL_SCHEMAS,
+              registry: dict = TOOL_REGISTRY) -> None:
+    """The ReAct loop. Mutates `messages` in place so history persists.
+
+    `schemas` and `registry` come from the current mode's view; the defaults
+    are the full v6 tool set.
+    """
     for step in range(1, MAX_ITERATIONS + 1):
         # Trim BEFORE the request, and before the timer starts. Old tool
         # results are the most redundant thing in the context: the assistant
         # turn that consumed them already distilled what mattered.
-        freed = trim_context(messages, num_ctx)
+        freed = trim_context(messages, num_ctx, schemas)
         if freed and verbose:
             print(f"  [trimmed ~{freed} tokens of old tool results]")
 
         try:
             t0 = time.time()
-            reply = call_ollama(model, messages, num_ctx, think)
+            reply = call_ollama(model, messages, num_ctx, think, schemas)
             elapsed = time.time() - t0
             if show_time:
                 out_chars = len(str(reply.get("content") or ""))
@@ -291,7 +302,7 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
                 pretty = ", ".join(f"{k}={v!r}" for k, v in args.items())
                 print(f"  [{step}] -> {name}({pretty})")
 
-            result = execute_tool(name, args)
+            result = execute_tool(name, args, registry)
 
             if verbose:
                 preview = result.replace("\n", " ")[:110]
@@ -301,6 +312,19 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
             messages.append({"role": "tool", "name": name, "content": result})
 
     print(f"agent> [stopped after {MAX_ITERATIONS} steps without a final answer]\n")
+
+
+def build_view(mode: str) -> modes.ModeView:
+    """Prompt (re-reading MEMORY.md), schemas and registry for a mode."""
+    return modes.apply_mode(mode, build_system_prompt(), TOOL_SCHEMAS, TOOL_REGISTRY)
+
+
+def mode_banner(view: modes.ModeView) -> str:
+    names = [s["function"]["name"] for s in view.schemas]
+    line = f"Mode: {view.name} — {len(names)} tools: {', '.join(names)}"
+    if view.missing:
+        line += f"\n  [warning] missing: {', '.join(view.missing)}"
+    return line
 
 
 def main() -> None:
@@ -316,20 +340,22 @@ def main() -> None:
                         help="print seconds per Ollama call")
     parser.add_argument("--plan", action="store_true",
                     help="plan mode: file writes/edits/deletes are refused")
+    parser.add_argument("--mode", default="general", choices=list(modes.MODES),
+                        help="project mode: tool subset + skill file (default general)")
     args = parser.parse_args()
     files.PLAN_MODE = args.plan
-    
 
-    system_prompt = build_system_prompt()
+    view = build_view(args.mode)
+    system_prompt = view.prompt
     messages: list[dict] = [{"role": "system", "content": system_prompt}]
 
     mem_status = "loaded" if load_memory().strip() else "empty"
-    print(f"Local agent v6 — model: {args.model}  ctx: {args.ctx}  (MEMORY.md: {mem_status})")
-    overhead = estimate_tokens(system_prompt) + estimate_tokens(json.dumps(TOOL_SCHEMAS))
+    print(f"Local agent v7 — model: {args.model}  ctx: {args.ctx}  (MEMORY.md: {mem_status})")
+    overhead = estimate_tokens(system_prompt) + estimate_tokens(json.dumps(view.schemas))
     print(f"Fixed overhead: ~{overhead} tokens ({overhead/args.ctx*100:.0f}% of context)")
-    print(f"Tools: {', '.join(TOOL_REGISTRY)}")
-    print("Commands: /clear  /history  /memory  /context  /undo  /exit\n")
-    
+    print(mode_banner(view))
+    print("Commands: /clear  /mode <name>  /history  /memory  /context  /undo  /exit\n")
+
 
     while True:
         try:
@@ -344,12 +370,24 @@ def main() -> None:
             print("bye")
             break
         if user_input == "/clear":
-            system_prompt = build_system_prompt()  # re-read MEMORY.md
+            view = build_view(view.name)  # re-read MEMORY.md, keep the mode
+            system_prompt = view.prompt
             messages = [{"role": "system", "content": system_prompt}]
             print("[history cleared, memory reloaded]\n")
             continue
+        if user_input == "/mode" or user_input.startswith("/mode "):
+            name = user_input[len("/mode"):].strip()
+            if name not in modes.MODES:
+                print(f"[current mode: {view.name}. Choose from: {', '.join(modes.MODES)}]\n")
+                continue
+            # The prompt and tool list change, so the old history no longer fits.
+            view = build_view(name)
+            system_prompt = view.prompt
+            messages = [{"role": "system", "content": system_prompt}]
+            print(f"[switched mode, history cleared]\n{mode_banner(view)}\n")
+            continue
         if user_input == "/context":
-            print(context_report(system_prompt, messages, args.ctx) + "\n")
+            print(context_report(system_prompt, messages, args.ctx, view.schemas) + "\n")
             continue
         if user_input == "/memory":
             mem = load_memory()
@@ -364,7 +402,8 @@ def main() -> None:
 
         messages.append({"role": "user", "content": user_input})
         run_agent(args.model, messages, verbose=not args.quiet,
-                  num_ctx=args.ctx, think=args.think, show_time=args.time)
+                  num_ctx=args.ctx, think=args.think, show_time=args.time,
+                  schemas=view.schemas, registry=view.registry)
 
 
 if __name__ == "__main__":

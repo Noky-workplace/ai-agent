@@ -40,8 +40,8 @@ import webbrowser
 
 import agent
 import files
+import modes
 from memory import load_memory
-from tools import TOOL_REGISTRY, TOOL_SCHEMAS
 
 HOST, PORT = "127.0.0.1", 8765
 IS_MAC = platform.system() == "Darwin"
@@ -51,6 +51,7 @@ STATE = {
     "status": "idle",     # idle | thinking | approval | error
     "detail": "",
     "turn": 0,            # bumped when a turn ends, so the page knows to refetch
+    "view": None,         # modes.ModeView: prompt, schemas and registry in use
 }
 LOCK = threading.Lock()
 
@@ -126,6 +127,17 @@ def _wrap_approvals() -> None:
 # Running a turn
 # --------------------------------------------------------------------------
 
+def _reset(mode: str) -> None:
+    """Rebuild the mode view (re-reading MEMORY.md) and start a fresh history.
+
+    Caller holds LOCK. A mode switch must reset: the system prompt and the
+    tool list both change, so the old history no longer matches either.
+    """
+    view = agent.build_view(mode)
+    STATE["view"] = view
+    STATE["messages"] = [{"role": "system", "content": view.prompt}]
+
+
 def _run_turn(text: str, opts: dict) -> str:
     """Run one agent turn, capturing what it would have printed.
 
@@ -139,6 +151,7 @@ def _run_turn(text: str, opts: dict) -> str:
     import contextlib
 
     STATE["messages"].append({"role": "user", "content": text})
+    view = STATE["view"]
     buffer = io.StringIO()
     try:
         with contextlib.redirect_stdout(buffer):
@@ -146,6 +159,8 @@ def _run_turn(text: str, opts: dict) -> str:
                 opts["model"], STATE["messages"],
                 verbose=True, num_ctx=opts["ctx"],
                 think=opts["think"], show_time=False,
+                # Dispatch through the mode's registry, never the global one.
+                schemas=view.schemas, registry=view.registry,
             )
     except Exception as exc:
         return f"[error] {exc}"
@@ -189,13 +204,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send(200, json.dumps({
                     "status": STATE["status"],
                     "detail": STATE["detail"],
+                    "model": self.opts["model"],
+                    "mode": STATE["view"].name,
                     "turn": STATE["turn"],
                     "messages": len(STATE["messages"]),
                 }))
         elif self.path == "/context":
             report = agent.context_report(
                 STATE["messages"][0]["content"] if STATE["messages"] else "",
-                STATE["messages"], self.opts["ctx"])
+                STATE["messages"], self.opts["ctx"], STATE["view"].schemas)
             self._send(200, json.dumps({"text": report}))
         else:
             self._send(404, json.dumps({"error": "not found"}))
@@ -207,9 +224,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         length = int(self.headers.get("Content-Length") or 0)
         try:
-            text = json.loads(self.rfile.read(length)).get("text", "").strip()
+            body = json.loads(self.rfile.read(length))
+            text = body.get("text", "").strip()
+            mode = body.get("mode") or ""
         except Exception:
             self._send(400, json.dumps({"error": "bad request"}))
+            return
+        if mode and mode not in modes.MODES:
+            self._send(400, json.dumps({"error": f"unknown mode {mode!r}"}))
             return
         if not text:
             self._send(400, json.dumps({"error": "empty message"}))
@@ -226,10 +248,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
             STATE["status"] = "thinking"
             STATE["detail"] = ""
 
+        if mode and mode != STATE["view"].name:
+            with LOCK:
+                _reset(mode)
+
         if text == "/clear":
             with LOCK:
-                STATE["messages"] = [{"role": "system",
-                                      "content": agent.build_system_prompt()}]
+                _reset(STATE["view"].name)
                 STATE["status"] = "idle"
                 STATE["turn"] += 1
             self._send(200, json.dumps({"answer": "History cleared, memory reloaded.",
@@ -305,17 +330,17 @@ PAGE = """<!doctype html>
   button:disabled { opacity:.45; cursor:default; }
 </style>
 
-<header><b>local agent</b><span id="model"></span><span id="state">idle</span></header>
+<header><b>local agent</b><span id="model"></span><span id="mode"></span><span id="state">idle</span></header>
 <div id="log">
   <div id="welcome">
     <h1>Hi, welcome back Noky!</h1>
     <p>What do you want to start with?</p>
-    <button class="start" data-prompt="Let's work on the finance trading project. Remind me where we left off, then help me plan the next step.">
+    <button class="start" data-mode="finance" data-prompt="Let's work on the finance trading project. Remind me where we left off, then help me plan the next step.">
       <span class="n">1</span>
       <span class="t">Finance trading</span>
       <span class="s">in progress</span>
     </button>
-    <button class="start" data-prompt="Let's work on MATH 3332 teaching assistant prep. Remind me where we left off, then help me plan the next step.">
+    <button class="start" data-mode="math3332" data-prompt="Let's work on MATH 3332 teaching assistant prep. Remind me where we left off, then help me plan the next step.">
       <span class="n">2</span>
       <span class="t">MATH 3332 — Teaching Assistant</span>
       <span class="s">in progress</span>
@@ -333,6 +358,8 @@ PAGE = """<!doctype html>
 const log = document.getElementById('log');
 const note = document.getElementById('note');
 const state = document.getElementById('state');
+const modelEl = document.getElementById('model');
+const modeEl = document.getElementById('mode');
 const input = document.getElementById('input');
 const send = document.getElementById('send');
 
@@ -364,6 +391,8 @@ setInterval(async () => {
   try {
     const s = await (await fetch('/status')).json();
     state.textContent = s.status;
+    modelEl.textContent = s.model;
+    modeEl.textContent = 'mode: ' + s.mode;
     if (s.status === 'approval') {
       note.style.display = 'block';
       note.textContent = '⌘ ' + s.detail;
@@ -374,9 +403,9 @@ setInterval(async () => {
 }, 700);
 
 // The starter buttons and the text box go through the same path, so a click
-// behaves exactly as if you had typed the prompt yourself.
+// behaves exactly as if you had typed the prompt yourself, plus a mode switch.
 document.querySelectorAll('.start').forEach(b => {
-  b.addEventListener('click', () => ask(b.dataset.prompt));
+  b.addEventListener('click', () => ask(b.dataset.prompt, b.dataset.mode));
 });
 
 document.getElementById('form').addEventListener('submit', (e) => {
@@ -385,7 +414,7 @@ document.getElementById('form').addEventListener('submit', (e) => {
   if (text) { input.value = ''; ask(text); }
 });
 
-async function ask(text) {
+async function ask(text, mode) {
   const welcome = document.getElementById('welcome');
   if (welcome) welcome.remove();
   add('you', text);
@@ -395,7 +424,7 @@ async function ask(text) {
     const r = await fetch('/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text})
+      body: JSON.stringify(mode ? {text, mode} : {text})
     });
     const data = await r.json();
     pending.remove();
@@ -420,20 +449,22 @@ def main() -> None:
     p.add_argument("--think", action="store_true")
     p.add_argument("--plan", action="store_true",
                    help="plan mode: file writes/edits/deletes are refused")
+    p.add_argument("--mode", default="general", choices=list(modes.MODES))
     p.add_argument("--port", type=int, default=PORT)
     args = p.parse_args()
 
     files.PLAN_MODE = args.plan
     _wrap_approvals()
 
-    STATE["messages"] = [{"role": "system", "content": agent.build_system_prompt()}]
+    _reset(args.mode)
     Handler.opts = {"model": args.model, "ctx": args.ctx, "think": args.think}
 
     url = f"http://{HOST}:{args.port}"
     print(f"Local agent web UI — {url}")
     print(f"  model: {args.model}   ctx: {args.ctx}"
           f"{'   [PLAN MODE]' if args.plan else ''}")
-    print(f"  tools: {len(TOOL_REGISTRY)}   MEMORY.md: "
+    print(f"  {agent.mode_banner(STATE['view'])}")
+    print(f"  MEMORY.md: "
           f"{'loaded' if load_memory().strip() else 'empty'}")
     print("\nApproval prompts appear HERE, in this terminal.")
     print("This window will raise itself when the agent needs you.")

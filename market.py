@@ -46,17 +46,12 @@ SOURCE_NOTE = ("Source: Yahoo Finance via yfinance (unofficial; may have gaps or
 
 
 def _io_dir() -> pathlib.Path:
-    """sandbox_io/, wherever sandbox.py says it is.
+    """sandbox_io/, as sandbox.py defines it (run_python's cwd).
 
-    Resolved at call time, not import time, so tests can point it elsewhere
-    and so this follows sandbox.IO_DIR if v6 named or moved it.
+    Resolved at call time, not import time, so tests can point it elsewhere.
     """
-    try:
-        from sandbox import IO_DIR  # type: ignore[attr-defined]
-        return pathlib.Path(IO_DIR)
-    except Exception:
-        import files
-        return pathlib.Path(files.WORKSPACE) / "sandbox_io"
+    from sandbox import io_dir
+    return io_dir()
 
 
 def _parse_date(value: str, name: str) -> datetime.date:
