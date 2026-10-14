@@ -169,6 +169,15 @@ class TestRun(unittest.TestCase):
         self.assertEqual(report["summary"]["n"], 1)
         self.assertEqual(report["summary"]["accuracy"], 1.0)
 
+    def test_every_case_skipped_still_summarises(self):
+        """--only market in general mode scores nothing; that must print a
+        helpful line, not crash on a half-empty summary."""
+        report = ev.run([self.case("q", "prices", ["get_prices"])], scripted({}),
+                        SCHEMAS, "sys", progress=None)
+        report["meta"] = {"mode": "general"}
+        self.assertEqual(report["summary"]["n"], 0)
+        self.assertIn("No cases scored", ev.format_summary(report))
+
     def test_unavailable_alternatives_are_dropped_not_skipped(self):
         cases = [self.case("t", "days to xmas", ["web_search", "get_current_time"])]
         chat = scripted({"days to xmas": tool_msg("web_search", {"query": "x"})})

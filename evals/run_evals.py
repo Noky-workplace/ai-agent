@@ -281,8 +281,6 @@ def run(cases: list[dict], chat, schemas: list[dict], system_prompt: str,
 
 
 def summarise(records: list[dict], runs: int = 1) -> dict:
-    if not records:
-        return {"n": 0, "accuracy": 0.0}
     n = len(records)
     by_cat = collections.defaultdict(list)
     by_tool = collections.defaultdict(list)
@@ -336,6 +334,10 @@ def summarise(records: list[dict], runs: int = 1) -> dict:
 
 def format_summary(report: dict) -> str:
     s, meta = report["summary"], report.get("meta", {})
+    if not s["n"]:
+        return (f"\nNo cases scored: {len(report.get('skipped', []))} skipped because their "
+                f"primary tool isn't loaded in mode {meta.get('mode', 'general')!r}. "
+                f"Try --mode finance for market cases.")
     lines = [
         "",
         f"model {meta.get('model', '?')}   mode {meta.get('mode', 'general')}   "
