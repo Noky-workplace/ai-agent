@@ -31,6 +31,7 @@ Layout:
 import datetime
 import pathlib
 import re
+import unicodedata
 
 WORKSPACE = pathlib.Path.cwd().resolve()
 MEMORY_FILE = WORKSPACE / "MEMORY.md"
@@ -74,11 +75,43 @@ _STOPWORDS = {
 _NEAR_DUP_THRESHOLD = 0.6
 _MIN_SHARED_WORDS = 2
 
+# Every fact line ends in "_(learned DATE)_" or, after a supersede,
+# "_(updated DATE)_". Both must be stripped before comparing, or the date
+# becomes three "words" (2026, 10, 15) shared with any fact mentioning today.
+_MARKER_RE = re.compile(r"\s*_\((?:learned|updated) [^)]*\)_\s*$")
+
+# Chinese and Japanese have no spaces between words, so a word regex sees one
+# long run. Character bigrams are the standard cheap substitute for a
+# segmenter: "繁體中文" -> 繁體, 體中, 中文. Hangul is included for the same
+# reason, though it does use spaces.
+_TOKEN_RE = re.compile(r"[a-z0-9]+|[぀-ヿ㐀-䶿一-鿿가-힯]+")
+_CJK_RE = re.compile(r"[぀-ヿ㐀-䶿一-鿿가-힯]")
+
+
+def _norm(text: str) -> str:
+    """Comparison form: NFC, whitespace collapsed, case-folded."""
+    return " ".join(unicodedata.normalize("NFC", text).split()).casefold()
+
+
+def _fact_lines(existing: str) -> list[tuple[int, str]]:
+    """(line index, fact text) for every '- ' line, markers stripped."""
+    out = []
+    for i, line in enumerate(existing.splitlines()):
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            out.append((i, _MARKER_RE.sub("", stripped[2:]).strip()))
+    return out
+
 
 def _content_words(text: str) -> set[str]:
-    """Lowercase, strip punctuation, drop stopwords."""
-    words = re.findall(r"[a-z0-9]+", text.lower())
-    return {w for w in words if w not in _STOPWORDS and len(w) > 1}
+    """Lowercase, strip punctuation, drop stopwords; CJK runs become bigrams."""
+    words = set()
+    for tok in _TOKEN_RE.findall(unicodedata.normalize("NFC", text).lower()):
+        if _CJK_RE.match(tok):
+            words.update(tok[i:i + 2] for i in range(len(tok) - 1))
+        elif tok not in _STOPWORDS and len(tok) > 1:
+            words.add(tok)
+    return words
 
 
 def _containment(a: str, b: str) -> float:
@@ -99,12 +132,7 @@ def _containment(a: str, b: str) -> float:
 def _find_near_duplicate(fact: str, existing: str) -> str | None:
     """Return the most similar existing memory line, or None."""
     best_line, best_score = None, 0.0
-    for line in existing.splitlines():
-        stripped = line.strip()
-        if not stripped.startswith("- "):
-            continue
-        # Ignore the trailing "_(learned YYYY-MM-DD)_" marker when comparing.
-        body = re.sub(r"\s*_\(learned [^)]*\)_\s*$", "", stripped[2:]).strip()
+    for _, body in _fact_lines(existing):
         score = _containment(fact, body)
         if score > best_score:
             best_line, best_score = body, score
@@ -114,10 +142,13 @@ def _find_near_duplicate(fact: str, existing: str) -> str | None:
 def _safe_note_path(topic: str) -> pathlib.Path | None:
     """Turn a topic name into a safe path inside notes/.
 
-    Strips anything that isn't alphanumeric/dash/underscore/space, so a model
-    asking for '../../.ssh/id_ed25519' gets a harmless filename instead.
+    Keeps letters and digits in any script (\\w is Unicode-aware), plus space,
+    dash and underscore. Dots, slashes and backslashes are all outside that
+    set, so a model asking for '../../.ssh/id_ed25519' gets a harmless
+    filename instead — while '線性代數' stays a usable name.
     """
-    stem = re.sub(r"[^A-Za-z0-9 _-]", "", topic).strip().replace(" ", "-").lower()
+    topic = unicodedata.normalize("NFC", topic)
+    stem = re.sub(r"[^\w -]", "", topic).strip().replace(" ", "-").lower()
     if not stem:
         return None
     path = (NOTES_DIR / f"{stem}.md").resolve()
@@ -156,25 +187,40 @@ def remember(fact: str, replaces: str = "") -> str:
     existing = MEMORY_FILE.read_text(encoding="utf-8", errors="replace")
     stamp = datetime.date.today().isoformat()
 
+    facts = _fact_lines(existing)
+
     # --- supersede path ---------------------------------------------------
+    # An exact match wins. Otherwise the target may be a fragment, but only
+    # if exactly one fact contains it: overwriting the first of several
+    # matches is a silent wrong edit, the same failure edit_file refuses.
     if replaces.strip():
-        target = replaces.strip()
+        target = _norm(replaces)
+        matches = [(i, b) for i, b in facts if _norm(b) == target]
+        if not matches:
+            matches = [(i, b) for i, b in facts if target in _norm(b)]
+        if not matches:
+            return (
+                f"Error: no existing memory matching {replaces.strip()!r}. "
+                f"Call remember with just the fact if you meant to add it as new."
+            )
+        if len(matches) > 1:
+            listing = "\n".join(f"  - {b}" for _, b in matches[:5])
+            return (
+                f"Error: {replaces.strip()!r} matches {len(matches)} memories:\n{listing}\n"
+                f"Nothing was changed. Call again with replaces set to the full text "
+                f"of the one to update."
+            )
+        i, body = matches[0]
         lines = existing.splitlines()
-        for i, line in enumerate(lines):
-            if not line.strip().startswith("- "):
-                continue
-            body = re.sub(r"\s*_\(learned [^)]*\)_\s*$", "", line.strip()[2:]).strip()
-            if body.lower() == target.lower() or target.lower() in body.lower():
-                lines[i] = f"- {fact}  _(updated {stamp})_"
-                MEMORY_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
-                return f"Updated memory.\n  was: {body}\n  now: {fact}"
-        return (
-            f"Error: no existing memory matching {target!r}. "
-            f"Call remember with just the fact if you meant to add it as new."
-        )
+        lines[i] = f"- {fact}  _(updated {stamp})_"
+        MEMORY_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return f"Updated memory.\n  was: {body}\n  now: {fact}"
 
     # --- exact duplicate --------------------------------------------------
-    if fact.lower() in existing.lower():
+    # Compared against fact lines only. A whole-file substring check matched
+    # text in the header, and reported a shorter fact as 'already in memory'
+    # when only a longer, different fact contained it.
+    if any(_norm(body) == _norm(fact) for _, body in facts):
         return f"Already in memory: {fact}"
 
     # --- near duplicate: refuse, and hand the decision to the model --------

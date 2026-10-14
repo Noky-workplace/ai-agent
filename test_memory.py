@@ -168,5 +168,103 @@ class TestNotes(MemoryTest):
         self.assertIn("try a different word", memory.search_notes("transformer"))
 
 
+class TestRegressions(MemoryTest):
+    """Bugs found while writing the suite above. Each failed before the fix."""
+
+    def test_exact_dup_check_ignores_the_header(self):
+        """'Keep this short' appears in MEMORY_HEADER. A whole-file substring
+        check reported it 'Already in memory' and silently dropped it."""
+        memory.remember("Prefers concise answers")
+        self.assertTrue(memory.remember("Keep this short").startswith("Remembered"))
+
+    def test_shorter_variant_of_a_fact_is_flagged_not_falsely_confirmed(self):
+        """'Lives in Hong Kong' is a substring of an existing, different fact.
+        Saying 'Already in memory' tells the model the exact fact is stored.
+        The near-duplicate path, which shows the existing text, is the honest
+        answer."""
+        memory.remember("Lives in Hong Kong Island East")
+        out = memory.remember("Lives in Hong Kong")
+        self.assertFalse(out.startswith("Already in memory"), out)
+        self.assertIn("overlaps an existing memory", out)
+
+    def test_updated_marker_does_not_leak_into_comparisons(self):
+        """After a supersede the line ends '_(updated YYYY-MM-DD)_'. Only the
+        '_(learned ...)_' marker was stripped, so today's date became three
+        'content words' and any fact mentioning today collided with it."""
+        import datetime
+        memory.remember("Works as a TA on Mondays")
+        memory.remember("Prefers dark mode", replaces="Works as a TA on Mondays")
+        out = memory.remember(f"Exam on {datetime.date.today().isoformat()}")
+        self.assertTrue(out.startswith("Remembered"), out)
+
+    def test_updated_line_can_be_superseded_by_exact_text(self):
+        memory.remember("Works as a TA on Mondays")
+        memory.remember("Works as a TA on Tuesdays", replaces="Works as a TA on Mondays")
+        out = memory.remember("Works as a TA on Fridays", replaces="Works as a TA on Tuesdays")
+        self.assertIn("was: Works as a TA on Tuesdays", out)
+        self.assertNotIn("_(updated", out)   # the echo shows the fact, not the marker
+        self.assertEqual(self.facts(), ["Works as a TA on Fridays"])
+
+    def test_ambiguous_replaces_is_refused(self):
+        """replaces='HKUST' matched the FIRST line containing it and silently
+        overwrote it, though two lines matched. Same rule as edit_file:
+        refuse an ambiguous edit rather than guess."""
+        memory.remember("Studies CPEG at HKUST")
+        memory.remember("Works as a TA at HKUST on Mondays")
+        out = memory.remember("Studies Mathematics at HKUST", replaces="HKUST")
+        self.assertIn("matches 2 memories", out)
+        self.assertEqual(self.facts(), ["Studies CPEG at HKUST", "Works as a TA at HKUST on Mondays"])
+
+    def test_unique_substring_replaces_still_works(self):
+        memory.remember("Studies CPEG at HKUST")
+        memory.remember("Prefers concise answers")
+        out = memory.remember("Studies CPEG and Mathematics at HKUST", replaces="CPEG")
+        self.assertTrue(out.startswith("Updated memory"), out)
+        self.assertEqual(self.facts()[0], "Studies CPEG and Mathematics at HKUST")
+
+    def test_exact_replaces_wins_over_substring_matches(self):
+        """An exact match is unambiguous even if the text also appears inside
+        another, longer fact."""
+        # Written directly: remember() would (correctly) refuse the second as
+        # an overlap of the first, but files edited by hand can hold both.
+        self.mem_file.write_text("# Agent Memory\n\n"
+                                 "- Studies CPEG  _(learned 2026-01-01)_\n"
+                                 "- Studies CPEG and Mathematics at HKUST  _(learned 2026-01-01)_\n")
+        out = memory.remember("Studies CPEG at HKUST", replaces="Studies CPEG")
+        self.assertTrue(out.startswith("Updated memory"), out)
+        self.assertEqual(self.facts(), ["Studies CPEG at HKUST",
+                                        "Studies CPEG and Mathematics at HKUST"])
+
+    def test_chinese_note_topic_is_accepted(self):
+        """The topic filter kept only ASCII letters, so '線性代數' became an
+        empty name and was refused outright."""
+        out = memory.write_note("線性代數", "特徵向量滿足 Av = λv")
+        self.assertIn("Created", out)
+        self.assertTrue((self.notes / "線性代數.md").exists())
+
+    def test_mixed_topic_and_traversal_still_blocked(self):
+        memory.write_note("MATH 3332 第一週", "x")
+        self.assertTrue((self.notes / "math-3332-第一週.md").exists())
+        memory.write_note("../../秘密/../.ssh", "x")
+        for p in self.notes.rglob("*.md"):
+            self.assertTrue(p.resolve().is_relative_to(self.notes.resolve()))
+            self.assertNotIn("/", p.name)
+
+    def test_chinese_facts_are_deduplicated(self):
+        """_content_words matched only [a-z0-9], so a Chinese fact had zero
+        content words and the near-duplicate check could never fire."""
+        memory.remember("喜歡用繁體中文回答")
+        out = memory.remember("喜歡用繁體中文回答問題")
+        self.assertIn("overlaps an existing memory", out)
+
+    def test_unrelated_chinese_facts_both_kept(self):
+        memory.remember("喜歡用繁體中文回答")
+        self.assertTrue(memory.remember("在科大讀電腦工程").startswith("Remembered"))
+
+    def test_mixed_language_words(self):
+        words = memory._content_words("TA for MATH 3332 課程")
+        self.assertTrue({"ta", "math", "3332", "課程"} <= words)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
