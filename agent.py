@@ -248,27 +248,21 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
         try:
             t0 = time.time()
             reply = call_ollama(model, messages, num_ctx, think)
-            if not reply.get("content") and not reply.get("tool_calls"):
-                print(f"  [debug] raw reply: {reply}", file=sys.stderr)
             elapsed = time.time() - t0
             if show_time:
                 out_chars = len(str(reply.get("content") or ""))
                 rate = (out_chars / 4) / elapsed if elapsed else 0
                 print(f"  [ollama call: {elapsed:.1f}s, ~{rate:.0f} tok/s]")
         except urllib.error.HTTPError as exc:
-                    detail = exc.read().decode("utf-8", errors="replace")[:500]
-                    print(f"[error] Ollama returned HTTP {exc.code}: {detail}", file=sys.stderr)
-                    return
+            detail = exc.read().decode("utf-8", errors="replace")[:500]
+            print(f"[error] Ollama returned HTTP {exc.code}: {detail}", file=sys.stderr)
+            return
         except urllib.error.URLError:
             print("[error] Can't reach Ollama at localhost:11434. Is it running?",
                   file=sys.stderr)
             return
         except Exception as exc:
             print(f"[error] Ollama call failed: {exc}", file=sys.stderr)
-            return
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")[:500]
-            print(f"[error] Ollama returned HTTP {exc.code}: {detail}", file=sys.stderr)
             return
 
         messages.append(reply)
