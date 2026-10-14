@@ -1,121 +1,155 @@
-# Local Agent — v3: Research & Code Execution
+# Local Agent — v6
 
 A fully-local personal assistant built from scratch (no agent frameworks).
 Runs on a MacBook Air M4 via Ollama.
 
 - **v0** chat loop · **v1** tool calling · **v2** file memory
-- **v3** academic paper search + Python execution
+- **v3** academic paper search + Python execution · **v4** `fetch_url`
+- **v5** safe file I/O + Seatbelt sandbox · **v6** web UI, persistent `sandbox_io/`, tests
 
 ## Setup
 
 ```bash
 ollama pull qwen3:8b
-pip3 install ddgs
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 mkdir -p notes
-python3 agent.py
+.venv/bin/python agent.py          # terminal
+.venv/bin/python server.py         # web UI at http://127.0.0.1:8765
 ```
 
-No new dependencies in v3 — arXiv and Semantic Scholar are stdlib `urllib`.
+Run it from the directory you want it to work in: that directory is the
+**workspace**, and every file tool is confined to it.
 
-## The tool budget problem
+| Flag | Effect |
+|---|---|
+| `--model` | Ollama model (default `qwen3:8b`) |
+| `--ctx N` | context window in tokens |
+| `--think` | Qwen3 reasoning mode (much slower) |
+| `--plan` | plan mode: writes, edits, deletes and extracts are refused |
+| `--time`, `--quiet` | per-call timing / hide tool traces (terminal only) |
 
-Every tool schema is sent to the model on **every request**. Two costs:
-context (~50–150 tokens each) and, more importantly, **selection accuracy**.
-An 8B model in this project already failed to pick `web_search` when there
-were only four options. Small models degrade further past ~8–10 tools.
+Commands: `/clear` `/history` `/memory` `/context` `/undo` `/exit`
+(the web UI supports `/clear` and `/undo`).
 
-So v3 added capability while holding the count to **8**, via two decisions:
+## Tools (14)
 
-**1. Dropped `calculator`.** `run_python` does everything it did. Two
-overlapping math tools is precisely the ambiguity that causes bad picks.
-
-**2. One `search_papers` tool, not two.** arXiv and Semantic Scholar are one
-tool with a `source` parameter. Picking a parameter from a two-item enum is
-an easier decision than picking between two near-identical tools.
-
-The general principle: **fewer, more distinct tools beat more, narrower ones.**
+Every tool schema is sent to the model on **every request**, which costs
+context and, more importantly, **selection accuracy**: an 8B model in this
+project once failed to pick `web_search` out of four options. The rule is
+**fewer, more distinct tools beat more, narrower ones** — e.g. there is no
+`calculator` (that's `run_python`), and arXiv and Semantic Scholar share one
+`search_papers` tool with a `source` parameter.
 
 | Tool | Purpose |
 |------|---------|
 | `get_current_time` | date/time |
 | `web_search` | current information (DuckDuckGo) |
+| `fetch_url` | full text of one page, after `web_search` |
 | `search_papers` | arXiv or Semantic Scholar |
-| `run_python` | calculations, data processing, code testing |
-| `read_file` | project files and notes |
-| `remember` | durable facts to MEMORY.md |
-| `write_note` | longer content to notes/ |
-| `search_notes` | grep notes |
+| `remember` | short durable facts → `MEMORY.md` |
+| `write_note` / `search_notes` | longer content in `notes/`, literal grep |
+| `read_file` / `list_files` | read the workspace |
+| `write_file` / `edit_file` / `delete_file` | change the workspace (approval) |
+| `run_python` | sandboxed Python, cwd `sandbox_io/` (approval) |
+| `extract_archive` | unpack zip/tar into `sandbox_io/<name>/` (approval) |
 
-## Code execution: isolation, not a sandbox
+## File tools (`files.py`)
 
-`run_python` runs code in a subprocess with a fresh temp directory, a 15s
-timeout, output truncation, and **a human approval prompt**.
+Paths and content come from the model, and the model can be steered by
+anything it reads, so every argument is treated as hostile.
 
-Be clear about what that does and does not buy you:
+- **Containment.** Paths are resolved with symlinks followed *before* the
+  workspace prefix check, so a link pointing outside is caught.
+- **Denylist.** `.env*`, keys, `.ssh`, `.git`, `.venv`, `MEMORY.md` and friends
+  are never readable or writable, compared case-folded and NFC-normalised
+  (APFS treats `.ENV` and `.env` as the same file).
+- **Approval.** Reads are free. Every write, edit and delete shows a diff and
+  asks. `--plan` disables mutation outright.
+- **Recoverable.** Deletes go to `.trash/`; writes are atomic and re-read to
+  verify; every mutation is checkpointed to a shadow git repo (`.agent-git/`)
+  first, so `/undo` rolls it back.
+
+## Code execution (`sandbox.py`, `sandbox.sb`)
+
+`run_python` runs behind **a human approval prompt** and, on macOS, inside a
+deny-default **Seatbelt** profile (`sandbox-exec`):
 
 | Threat | Handled? |
 |---|---|
-| infinite loop hangs the agent | yes — timeout kills it |
-| crash takes down the agent | yes — separate process |
-| relative file writes hit your project | yes — temp cwd |
+| infinite loop / crash | yes — separate process, 15s timeout |
 | runaway output floods context | yes — truncated |
-| **reading `~/.ssh/id_ed25519`** | **no** — absolute paths work |
-| **network requests** | **no** |
-| **memory/CPU exhaustion** | **no** |
+| reading `~/.ssh/...` | yes — kernel denies reads outside the interpreter and `sandbox_io/` |
+| writing `agent.py`, `MEMORY.md`, `notes/` | yes — `sandbox_io/` is the only writable path |
+| network requests | yes — `(deny network*)` |
+| memory/CPU exhaustion | **no** |
+| a bug in the profile | **no** — Seatbelt profiles have been escaped in shipped tools |
 
-Real isolation needs an OS boundary: Docker with `--network=none` and a
-read-only mount, or a VM. Until then, **the approval prompt is the actual
-security control** — read the code before typing `y`.
+The approval prompt stays the primary control. Off macOS there is no
+sandbox, and the tool result says so. Set `REQUIRE_APPROVAL = False` only
+inside a disposable container.
 
-Set `REQUIRE_APPROVAL = False` in `sandbox.py` only inside a disposable
-container.
+### `sandbox_io/`
+
+The sandbox's cwd and only writable path, persisted between calls and
+visible to the file tools, so data moves without any new mechanism:
+
+- **in:** `write_file("sandbox_io/data.csv", ...)`, `extract_archive("data.zip")`,
+  or drop files there by hand
+- **compute:** `run_python` reads and writes relative paths freely
+- **out:** `read_file("sandbox_io/result.json")`
+
+It is git-ignored and excluded from checkpoints, so `/undo` does not restore
+it. See [`docs/adr/0001-persistent-sandbox-io.md`](docs/adr/0001-persistent-sandbox-io.md).
+
+## Web UI (`server.py`)
+
+A single-page chat on `127.0.0.1:8765` (localhost only — never change the
+host). Approval prompts stay **in the terminal**: the browser shows "waiting
+for approval" and the server raises Terminal.app until you answer.
 
 ## Try this
 
 ```
 you> find recent papers on retrieval augmented generation
-you> search semantic scholar for attention is all you need, how many citations?
 you> what's the compound interest on 5000 at 4.5% for 7 years?
-you> write a function to check if a string is a palindrome and test it
+you> unpack data.zip and tell me the mean of the price column
 you> find papers on quantization and save a summary to my notes
 ```
 
-The last one is the real test: `search_papers` then `write_note` in one turn.
 Multi-step tool chains are where small models most often lose the thread.
 
 ## Files
 
 ```
-agent.py      ReAct loop + CLI
-tools.py      registry: merges all tool modules
-memory.py     MEMORY.md + notes/  (v2)
-research.py   arXiv + Semantic Scholar  (v3)
-sandbox.py    Python execution  (v3)
+agent.py         ReAct loop + CLI
+server.py        web UI
+tools.py         registry: merges all tool modules
+memory.py        MEMORY.md + notes/
+research.py      arXiv + Semantic Scholar
+fetch.py         fetch_url
+files.py         workspace file tools, containment, checkpoints
+sandbox.py       run_python + extract_archive
+sandbox.sb       Seatbelt profile
+bench.py         latency profiling (why is the agent slow?)
+test_files.py    containment and file-tool tests
+test_sandbox.py  extract_archive tests
 ```
 
-Adding a capability = one new module exporting `*_TOOL_SCHEMAS` and
-`*_TOOL_REGISTRY`, plus two lines in `tools.py`. But check the tool budget
-first — at 8, the next addition should probably replace something.
+Adding a capability = one module exporting `*_TOOL_SCHEMAS` and
+`*_TOOL_REGISTRY`, plus two lines in `tools.py`. Check the tool budget first.
+
+```bash
+.venv/bin/python -m unittest test_files test_sandbox -v
+```
 
 ## Known limitations
 
-- **Tool selection is the weak point**, not tool execution. If the agent
-  answers without searching, that's the 8B model being overconfident. Larger
-  models (`qwen3:14b`) improve this if you have the RAM.
-- **`search_notes` is literal matching.** "CNN" won't find a note about
-  "convolutional networks". Deliberate tradeoff — see ADR 001.
+- **Tool selection is the weak point**, not tool execution. Larger models
+  (`qwen3:14b`) help if you have the RAM.
+- **`search_notes` is literal matching.** "CNN" won't find "convolutional
+  networks". Deliberate tradeoff.
 - **Semantic Scholar rate-limits anonymous traffic.** On HTTP 429, wait or
   use `source='arxiv'`.
-- **No prompt-injection defense yet.** A malicious page from `web_search`
-  could try to influence the agent. This is now more serious than in v2,
-  because the agent can write files *and* execute code. **v4's job.**
-
-## Roadmap
-
-- ~~v0 chat~~ · ~~v1 tools~~ · ~~v2 memory~~ · ~~v3 research + code~~
-- **v4** — evals + guardrails (prompt-injection defense, audit log,
-  tool-selection accuracy measurement)
-- **v5** — optional web UI (FastAPI)
-- **v6** — optional QLoRA fine-tune (needs a cloud GPU)
-- *deferred*: FinTech/quant tools (yfinance) — skipped to protect the tool
-  budget; add when routing is solved in v4.
+- **Prompt injection is contained, not prevented.** A malicious page can
+  still steer the model; the denylist, approvals, and sandbox limit what it
+  can do with that.

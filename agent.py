@@ -304,7 +304,7 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="v3 local agent: tools, file memory, papers, code execution")
+    parser = argparse.ArgumentParser(description="v6 local agent: tools, file memory, papers, sandboxed code, file I/O")
     parser.add_argument("--model", default="qwen3:8b")
     parser.add_argument("--quiet", action="store_true", help="hide tool traces")
     parser.add_argument("--ctx", type=int, default=DEFAULT_NUM_CTX,
@@ -324,11 +324,11 @@ def main() -> None:
     messages: list[dict] = [{"role": "system", "content": system_prompt}]
 
     mem_status = "loaded" if load_memory().strip() else "empty"
-    print(f"Local agent v3 — model: {args.model}  ctx: {args.ctx}  (MEMORY.md: {mem_status})")
+    print(f"Local agent v6 — model: {args.model}  ctx: {args.ctx}  (MEMORY.md: {mem_status})")
     overhead = estimate_tokens(system_prompt) + estimate_tokens(json.dumps(TOOL_SCHEMAS))
     print(f"Fixed overhead: ~{overhead} tokens ({overhead/args.ctx*100:.0f}% of context)")
     print(f"Tools: {', '.join(TOOL_REGISTRY)}")
-    print("Commands: /clear  /history  /memory  /context  /exit\n")
+    print("Commands: /clear  /history  /memory  /context  /undo  /exit\n")
     
 
     while True:
@@ -356,8 +356,8 @@ def main() -> None:
             print(f"[MEMORY.md]\n{mem}\n" if mem.strip() else "[MEMORY.md is empty]\n")
             continue
         if user_input == "/undo":
-                print(files.undo_last() + "\n")
-                continue
+            print(files.undo_last() + "\n")
+            continue
         if user_input == "/history":
             print(f"[{len(messages)} messages in context]\n")
             continue
