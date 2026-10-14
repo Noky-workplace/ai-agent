@@ -1,0 +1,52 @@
+# Tool-selection cases. One JSON object per line; lines starting with # are ignored.
+# expect: acceptable FIRST actions, primary first. "none" = answer without a tool.
+# A case is skipped when its primary tool isn't loaded (older checkout, or a mode hides it).
+# Add a case whenever the agent picks wrong in real use — that is how this set earns its keep.
+{"id": "t01", "category": "time", "prompt": "What's today's date?", "expect": ["get_current_time"]}
+{"id": "t02", "category": "time", "prompt": "What day of the week is it?", "expect": ["get_current_time"]}
+{"id": "t03", "category": "time", "prompt": "How many days are left until Christmas?", "expect": ["get_current_time", "run_python"], "note": "needs today's date before any arithmetic"}
+{"id": "w01", "category": "web", "prompt": "Who won the most recent Formula 1 race?", "expect": ["web_search"]}
+{"id": "w02", "category": "web", "prompt": "What's the price of Bitcoin right now?", "expect": ["web_search"]}
+{"id": "w03", "category": "web", "prompt": "Any news about Ollama this week?", "expect": ["web_search"]}
+{"id": "w04", "category": "web", "prompt": "What is the current USD to HKD exchange rate?", "expect": ["web_search"]}
+{"id": "w05", "category": "web", "prompt": "What's the weather in Hong Kong right now?", "expect": ["web_search"]}
+{"id": "w06", "category": "web", "prompt": "Who is the current CEO of OpenAI?", "expect": ["web_search"], "note": "current role holder — training data may be stale"}
+{"id": "w07", "category": "web", "prompt": "Search for the latest Ollama release notes and read the full page.", "expect": ["web_search"], "note": "first action is the search; fetch_url comes after"}
+{"id": "p01", "category": "papers", "prompt": "Find recent papers on observation masking for LLM agents.", "expect": ["search_papers"]}
+{"id": "p02", "category": "papers", "prompt": "Are there any studies on retrieval-augmented generation for math problems?", "expect": ["search_papers"]}
+{"id": "p03", "category": "papers", "prompt": "Look up the most cited papers on the transformer attention mechanism.", "expect": ["search_papers"], "note": "should pick source=semantic_scholar for citation counts"}
+{"id": "m01", "category": "math", "prompt": "What is 4837 times 2913?", "expect": ["run_python"]}
+{"id": "m02", "category": "math", "prompt": "Compute the eigenvalues of the matrix [[2, 1], [1, 3]].", "expect": ["run_python"]}
+{"id": "m03", "category": "math", "prompt": "Is 1000003 a prime number?", "expect": ["run_python"]}
+{"id": "m04", "category": "math", "prompt": "What is the standard deviation of 3, 7, 7, 19, 24?", "expect": ["run_python"]}
+{"id": "m05", "category": "math", "prompt": "Convert 37 degrees Celsius to Fahrenheit.", "expect": ["run_python"], "note": "system prompt forbids mental arithmetic"}
+{"id": "r01", "category": "files", "prompt": "Show me what's in README.md.", "expect": ["read_file"]}
+{"id": "r02", "category": "files", "prompt": "Open requirements.txt and tell me the dependencies.", "expect": ["read_file"]}
+{"id": "r03", "category": "files", "prompt": "What files are in this project?", "expect": ["list_files"]}
+{"id": "r04", "category": "files", "prompt": "List everything in the notes folder.", "expect": ["list_files", "search_notes"], "note": "search_notes with an empty query also lists notes"}
+{"id": "x01", "category": "edit", "prompt": "Create a file called todo.md with a heading that says Tasks.", "expect": ["write_file"]}
+{"id": "x02", "category": "edit", "prompt": "In notes/plan.md, change 'deadline: Friday' to 'deadline: Monday'.", "expect": ["edit_file", "read_file"], "note": "exact old text given, so edit_file directly is fine; reading first is also correct"}
+{"id": "x03", "category": "edit", "prompt": "Fix the typo 'recieve' in README.md.", "expect": ["read_file", "edit_file"], "note": "read first to copy old_string exactly"}
+{"id": "x04", "category": "edit", "prompt": "Delete the file old_draft.txt.", "expect": ["delete_file"]}
+{"id": "x05", "category": "edit", "prompt": "Overwrite scratch.txt with the text hello.", "expect": ["write_file"]}
+{"id": "a01", "category": "archive", "prompt": "Unzip data.zip so I can analyse it.", "expect": ["extract_archive"]}
+{"id": "a02", "category": "archive", "prompt": "Extract the contents of results.tar.gz.", "expect": ["extract_archive"]}
+{"id": "k01", "category": "memory", "prompt": "Remember that I prefer answers in Traditional Chinese.", "expect": ["remember"]}
+{"id": "k02", "category": "memory", "prompt": "My exam is on December 3rd, please keep that in mind.", "expect": ["remember"]}
+{"id": "k03", "category": "memory", "prompt": "I'm a TA for MATH 3332 this semester, remember that.", "expect": ["remember"]}
+{"id": "n01", "category": "notes", "prompt": "Save these lecture notes on eigenvalues: an eigenvector v of A satisfies Av = λv, and the eigenvalues are the roots of det(A - λI) = 0.", "expect": ["write_note"]}
+{"id": "n02", "category": "notes", "prompt": "Write up what we learned about context windows today and save it as a note for later.", "expect": ["write_note"], "note": "long-form content, not a fact about the user"}
+{"id": "n03", "category": "notes", "prompt": "What did I save about eigenvectors?", "expect": ["search_notes"]}
+{"id": "n04", "category": "notes", "prompt": "Do I have any notes on Seatbelt sandboxing?", "expect": ["search_notes"]}
+{"id": "f01", "category": "fetch", "prompt": "Read this article and summarise it: https://example.com/post", "expect": ["fetch_url"]}
+{"id": "f02", "category": "fetch", "prompt": "What does https://docs.python.org/3/library/tarfile.html say about extraction filters?", "expect": ["fetch_url"]}
+{"id": "o01", "category": "no_tool", "prompt": "Hi!", "expect": ["none"]}
+{"id": "o02", "category": "no_tool", "prompt": "Thanks, that's all for now.", "expect": ["none"]}
+{"id": "o03", "category": "no_tool", "prompt": "Explain what a hash map is in two sentences.", "expect": ["none"], "note": "stable knowledge — no tool needed"}
+{"id": "o04", "category": "no_tool", "prompt": "Translate 'good morning' into French.", "expect": ["none"]}
+{"id": "o05", "category": "no_tool", "prompt": "What's the difference between a list and a tuple in Python?", "expect": ["none"]}
+{"id": "o06", "category": "no_tool", "prompt": "What's my name?", "expect": ["none", "search_notes"], "note": "answered from MEMORY.md when loaded; evals run without it by default"}
+{"id": "q01", "category": "market", "prompt": "Get daily prices for 0700.HK for 2024.", "expect": ["get_prices"]}
+{"id": "q02", "category": "market", "prompt": "Backtest a 20/50-day moving average crossover on AAPL over the last 3 years.", "expect": ["get_prices", "get_current_time"], "note": "'last 3 years' needs today's date; fetching first with a guessed range is also acceptable"}
+{"id": "q03", "category": "market", "prompt": "Download Hang Seng Index history since 2020.", "expect": ["get_prices"]}
+{"id": "q04", "category": "market", "prompt": "What was Tencent's closing price on its last trading day of 2023?", "expect": ["get_prices", "web_search"]}
