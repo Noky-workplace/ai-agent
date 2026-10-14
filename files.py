@@ -72,6 +72,7 @@ PROTECTED = (
 )
 HIDDEN_FROM_LISTING = (".git", ".agent-git", ".venv", "__pycache__",
                        ".trash", ".DS_Store")
+CHECKPOINT_EXCLUDE = HIDDEN_FROM_LISTING + (".env", ".env.*", "sandbox_io/")
 
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 
@@ -201,9 +202,12 @@ def _checkpoint(reason: str) -> None:
     try:
         if not (WORKSPACE / SHADOW_GIT).exists():
             subprocess.run(git + ["init", "-q"], check=True, capture_output=True)
-            exclude = WORKSPACE / SHADOW_GIT / "info" / "exclude"
-            exclude.parent.mkdir(exist_ok=True)
-            exclude.write_text("\n".join(HIDDEN_FROM_LISTING + (".env", ".env.*")) + "\n")
+        # Rewritten every time so repos created before an entry was added
+        # pick it up. sandbox_io/ is scratch data: excluded so it does not
+        # bloat checkpoints, which also means /undo does not restore it.
+        exclude = WORKSPACE / SHADOW_GIT / "info" / "exclude"
+        exclude.parent.mkdir(exist_ok=True)
+        exclude.write_text("\n".join(CHECKPOINT_EXCLUDE) + "\n")
         subprocess.run(git + ["add", "-A"], check=True, capture_output=True, timeout=20)
         subprocess.run(
             git + ["-c", "user.name=agent", "-c", "user.email=agent@local",

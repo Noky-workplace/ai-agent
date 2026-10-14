@@ -1,10 +1,11 @@
 ;; Seatbelt profile for run_python.
 ;;
 ;; Deny everything, then allow only what a Python interpreter needs to start,
-;; import the stdlib and venv packages, and write inside its scratch directory.
+;; import the stdlib and venv packages, and read/write inside sandbox_io/.
 ;;
 ;; Parameters (passed with -D by sandbox.py):
-;;   TMP     the temp cwd — the only writable location
+;;   TMP     per-call temp dir holding the script — read-only
+;;   IO      the workspace's sandbox_io/ — cwd, and the only writable location
 ;;   PYBASE  realpath of sys.base_prefix (the Homebrew/system Python)
 ;;   PYVENV  realpath of sys.prefix (the .venv)
 ;;
@@ -26,6 +27,7 @@
 (import "bsd.sb")
 
 (define tmp    (param "TMP"))
+(define io     (param "IO"))
 (define pybase (param "PYBASE"))
 (define pyvenv (param "PYVENV"))
 
@@ -43,7 +45,7 @@
     (subpath "/usr") (subpath "/System") (subpath "/Library")
     (subpath "/bin") (subpath "/sbin") (subpath "/opt/homebrew")
     (subpath "/private/var/db/dyld")
-    (subpath pybase) (subpath pyvenv) (subpath tmp)
+    (subpath pybase) (subpath pyvenv) (subpath tmp) (subpath io)
     (literal "/dev/null") (literal "/dev/urandom") (literal "/dev/random"))
 
 ;; Without file-map-executable, dyld cannot map shared libraries and even a
@@ -52,9 +54,11 @@
     (subpath "/usr/lib") (subpath "/System") (subpath "/opt/homebrew")
     (subpath pybase) (subpath pyvenv))
 
-;; The scratch directory is the ONLY writable location. Absolute paths
-;; elsewhere fail, which is what the temp cwd alone could never enforce.
-(allow file-write* (subpath tmp) (literal "/dev/null"))
+;; sandbox_io/ is the ONLY writable location. It persists across calls and
+;; the file tools can see it, so it is how data moves in and results move
+;; out. Absolute paths elsewhere fail, including the rest of the workspace.
+;; TMP stays read-only: the script never needs to write next to itself.
+(allow file-write* (subpath io) (literal "/dev/null"))
 
 ;; Broad on purpose for the first run. Narrow to specific global-names once
 ;; `log stream` shows which services Python actually asks for.
