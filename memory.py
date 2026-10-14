@@ -315,11 +315,7 @@ MEMORY_TOOL_SCHEMAS = [
         "function": {
             "name": "remember",
             "description": (
-                "Save a short durable fact about the user (name, course, "
-                "preference, deadline). Use when the user says to remember "
-                "something, or states a lasting fact about themselves. "
-                "If told the fact overlaps an existing memory, call again "
-                "with 'replaces' set to that existing memory to update it."
+                "Save one short lasting fact about the user; long content goes in write_note."
             ),
             "parameters": {
                 "type": "object",
@@ -328,8 +324,7 @@ MEMORY_TOOL_SCHEMAS = [
                     "replaces": {
                         "type": "string",
                         "description": (
-                            "Optional. An existing memory this fact supersedes. "
-                            "Leave empty for a brand new fact."
+                            "Existing memory this updates, if any."
                         ),
                     },
                 },
@@ -342,14 +337,13 @@ MEMORY_TOOL_SCHEMAS = [
         "function": {
             "name": "write_note",
             "description": (
-                "Save longer content to a topic note file. Use for research "
-                "summaries, lecture notes, or anything too long for remember."
+                "Save summaries, lecture notes or other long content to a topic note; facts use remember."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "topic": {"type": "string", "description": "Short topic name, e.g. 'linear algebra'"},
-                    "content": {"type": "string", "description": "The content to save, markdown."},
+                    "content": {"type": "string", "description": "Markdown content."},
                 },
                 "required": ["topic", "content"],
             },
@@ -360,9 +354,7 @@ MEMORY_TOOL_SCHEMAS = [
         "function": {
             "name": "search_notes",
             "description": (
-                "Search saved notes by literal keyword. Leave query empty to "
-                "list all notes. Returns filenames and matching lines; read a "
-                "full note afterwards with read_file."
+                "Search saved notes by literal keyword; an empty query lists all notes."
             ),
             "parameters": {
                 "type": "object",

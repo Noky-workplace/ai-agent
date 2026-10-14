@@ -89,7 +89,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "get_current_time",
-            "description": "Get the current local date and time. Use for any question about today's date, the time, or what day it is.",
+            "description": "Get today's local date and time.",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
@@ -97,7 +97,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "web_search",
-            "description": "Search the web for current information. Use for recent events, news, prices, or any fact that may have changed since training.",
+            "description": "Search the web for current facts, news or prices; not academic papers.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -111,7 +111,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Read a text file from the current project directory.",
+            "description": "Read a text file in the project.",
             "parameters": {
                 "type": "object",
                 "properties": {

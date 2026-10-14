@@ -342,7 +342,7 @@ SANDBOX_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "extract_archive",
-            "description": "Unpack a workspace zip or tar archive into sandbox_io/<name>/ for run_python.",
+            "description": "Unpack a project zip or tar archive into sandbox_io/<name>/ for run_python.",
             "parameters": {
                 "type": "object",
                 "properties": {

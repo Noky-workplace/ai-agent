@@ -96,9 +96,7 @@ FETCH_TOOL_SCHEMAS = [
         "function": {
             "name": "fetch_url",
             "description": (
-                "Read the full text of a web page. Use after web_search when "
-                "a result looks relevant and the snippet is not enough to "
-                "answer. Only works on pages found via search or given by the user."
+                "Read the full text of a web page, such as a web_search result link."
             ),
             "parameters": {
                 "type": "object",

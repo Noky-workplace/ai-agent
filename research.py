@@ -162,10 +162,7 @@ RESEARCH_TOOL_SCHEMAS = [
         "function": {
             "name": "search_papers",
             "description": (
-                "Search academic papers by keyword. Use for any question about "
-                "research, papers, studies, or academic literature. "
-                "source='arxiv' for CS/physics/math preprints and recent ML work; "
-                "source='semantic_scholar' for broader fields and citation counts."
+                "Search academic papers on arXiv or Semantic Scholar; for news use web_search."
             ),
             "parameters": {
                 "type": "object",
@@ -177,7 +174,7 @@ RESEARCH_TOOL_SCHEMAS = [
                     "source": {
                         "type": "string",
                         "enum": ["arxiv", "semantic_scholar"],
-                        "description": "Which database to search. Default arxiv.",
+                        "description": "arxiv (default) or semantic_scholar.",
                     },
                 },
                 "required": ["query"],

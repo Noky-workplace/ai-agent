@@ -188,8 +188,7 @@ MARKET_TOOL_SCHEMAS = [
         "function": {
             "name": "get_prices",
             "description": (
-                "Download daily/weekly/monthly price history for a stock or index "
-                "into a CSV that run_python can read."
+                "Download stock or index price history to a CSV for run_python."
             ),
             "parameters": {
                 "type": "object",

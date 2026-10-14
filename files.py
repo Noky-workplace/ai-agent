@@ -413,7 +413,7 @@ FILES_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "list_files",
-            "description": "List files and folders in a directory of the project.",
+            "description": "List files and folders in a project directory.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -428,9 +428,7 @@ FILES_TOOL_SCHEMAS = [
         "function": {
             "name": "write_file",
             "description": (
-                "Create a new text file, or fully replace an existing one. "
-                "For changing part of a file use edit_file instead. The user "
-                "must approve."
+                "Create or fully replace a text file; for partial changes use edit_file."
             ),
             "parameters": {
                 "type": "object",
@@ -447,10 +445,7 @@ FILES_TOOL_SCHEMAS = [
         "function": {
             "name": "edit_file",
             "description": (
-                "Replace an exact string in a text file with new text. Call "
-                "read_file first and copy old_string exactly, including "
-                "whitespace. old_string must be unique unless replace_all is "
-                "true. The user must approve."
+                "Replace exact text copied from read_file within a file; whole rewrites use write_file."
             ),
             "parameters": {
                 "type": "object",
@@ -458,7 +453,7 @@ FILES_TOOL_SCHEMAS = [
                     "path": {"type": "string", "description": "Relative path."},
                     "old_string": {"type": "string", "description": "Exact text to find."},
                     "new_string": {"type": "string", "description": "Replacement text."},
-                    "replace_all": {"type": "boolean", "description": "Replace every occurrence. Default false."},
+                    "replace_all": {"type": "boolean", "description": "Replace every match. Default false."},
                 },
                 "required": ["path", "old_string", "new_string"],
             },
@@ -468,7 +463,7 @@ FILES_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "delete_file",
-            "description": "Move a file to the project trash folder. The user must approve.",
+            "description": "Move a project file to the trash.",
             "parameters": {
                 "type": "object",
                 "properties": {
