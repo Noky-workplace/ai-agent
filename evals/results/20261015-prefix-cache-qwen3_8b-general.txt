@@ -1,0 +1,11 @@
+model qwen3:8b, 14 tools — warming up (load time excluded)...
+
+request     prompt tokens  prefill s
+cold                 1792     10.631
+repeat               1792      0.058
+new turn             1792      0.221
+
+repeat   : CACHED  (1% of cold prefill)
+new turn : CACHED  (2% of cold prefill)
+
+'new turn' is the one that matters: it is what every ReAct step looks like.

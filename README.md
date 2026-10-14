@@ -1,4 +1,4 @@
-# Local Agent — v6
+# Local Agent — v7
 
 A fully-local personal assistant built from scratch (no agent frameworks).
 Runs on a MacBook Air M4 via Ollama.
@@ -6,6 +6,7 @@ Runs on a MacBook Air M4 via Ollama.
 - **v0** chat loop · **v1** tool calling · **v2** file memory
 - **v3** academic paper search + Python execution · **v4** `fetch_url`
 - **v5** safe file I/O + Seatbelt sandbox · **v6** web UI, persistent `sandbox_io/`, tests
+- **v7** eval harness, project modes, memory fixes
 
 ## Setup
 
@@ -26,10 +27,11 @@ Run it from the directory you want it to work in: that directory is the
 | `--ctx N` | context window in tokens |
 | `--think` | Qwen3 reasoning mode (much slower) |
 | `--plan` | plan mode: writes, edits, deletes and extracts are refused |
+| `--mode` | `general` (default), `finance` or `math3332`; see v7 below |
 | `--time`, `--quiet` | per-call timing / hide tool traces (terminal only) |
 
-Commands: `/clear` `/history` `/memory` `/context` `/undo` `/exit`
-(the web UI supports `/clear` and `/undo`).
+Commands: `/clear` `/mode <name>` `/history` `/memory` `/context` `/undo` `/exit`
+(the web UI supports `/clear` and `/undo`; its two welcome buttons switch mode).
 
 ## Tools (14)
 
@@ -52,6 +54,62 @@ project once failed to pick `web_search` out of four options. The rule is
 | `write_file` / `edit_file` / `delete_file` | change the workspace (approval) |
 | `run_python` | sandboxed Python, cwd `sandbox_io/` (approval) |
 | `extract_archive` | unpack zip/tar into `sandbox_io/<name>/` (approval) |
+
+## v7: evals, modes, memory fixes
+
+### Evals (`evals/`)
+
+`python3 -m evals.run_evals` sends each case in `evals/cases.jsonl` to the
+model once and scores its **first action**: which tool it calls (or none) and
+whether the arguments are valid. No tool is ever executed. Temperature 0,
+seed 42. Results are saved under `evals/results/`.
+
+Baseline, qwen3:8b on this Mac (one run each):
+
+| Mode | Tools | Cases scored | Accuracy | Arg validity | Median latency | Decode |
+|---|---|---|---|---|---|---|
+| general | 14 | 44 (4 skipped) | 95.5% | 100% | 1.59 s | 19.8 tok/s |
+| finance | 12 | 44 (4 skipped) | 93.2% | 100% | 1.67 s | 18.9 tok/s |
+
+Misses: general `write_note → search_papers`, `fetch_url → none`; finance
+`web_search → none`, `write_note → none`, `get_prices → get_current_time`.
+A case is skipped when its tool is not in the mode, so the two rows score
+different sets of 44; on the 40 cases both modes share, each scores 38/40.
+Sources: `evals/results/20261015-033828-qwen3_8b-general.json`,
+`evals/results/20261015-034040-qwen3_8b-finance.json`.
+
+**Prefix cache: cached.** `python3 -m evals.prefix_cache` measured 10.631 s
+to prefill the 1,792-token prompt cold, 0.221 s for a new turn on the same
+prefix (2%). So keeping every tool schema loaded costs once per session, not
+per turn (`evals/results/20261015-prefix-cache-qwen3_8b-general.txt`).
+
+**Qwen3.5-9B comparison: pending.** Ollama 0.18.2 cannot pull `qwen3.5:9b`
+(HTTP 412, needs a newer Ollama). The default model stays `qwen3:8b` until
+that run exists.
+
+### Modes (`modes.py`, `skills/`)
+
+A mode is a fixed tool subset plus a skill file appended to the system prompt,
+chosen once per session (`--mode`, `/mode`, or a web UI button):
+
+| Mode | Tools | Adds |
+|---|---|---|
+| `general` | the 14 above | nothing (identical to v6) |
+| `finance` | 12 | `get_prices` (Yahoo Finance via optional `yfinance`, CSV into `sandbox_io/data/`), backtest rules |
+| `math3332` | 12 | TA-prep rules |
+
+The model is sent only the mode's schemas, and tool calls dispatch only
+through the mode's registry, so a hidden tool's name is refused even if the
+model emits it (`test_agent.py`). See ADR 0002.
+
+### Memory fixes (`memory.py`)
+
+Five bugs, each pinned by a regression test: the duplicate check matched
+header text and longer facts; the `_(updated …)_` marker leaked dates into
+comparisons; `replaces=` overwrote the first of several matches (now refused
+unless exactly one matches); Chinese note topics were stripped to nothing;
+and Chinese facts had no "words", so duplicates were never caught (CJK text
+now uses character bigrams).
 
 ## File tools (`files.py`)
 
@@ -130,16 +188,19 @@ fetch.py         fetch_url
 files.py         workspace file tools, containment, checkpoints
 sandbox.py       run_python + extract_archive
 sandbox.sb       Seatbelt profile
+modes.py         project modes: tool subsets + skills/
+market.py        get_prices (finance mode)
+skills/          per-mode prompt rules
+evals/           tool-selection eval harness + results/
 bench.py         latency profiling (why is the agent slow?)
-test_files.py    containment and file-tool tests
-test_sandbox.py  extract_archive tests
+test_*.py        unit tests (files, sandbox, memory, modes, market, evals, agent, server)
 ```
 
 Adding a capability = one module exporting `*_TOOL_SCHEMAS` and
 `*_TOOL_REGISTRY`, plus two lines in `tools.py`. Check the tool budget first.
 
 ```bash
-.venv/bin/python -m unittest test_files test_sandbox -v
+.venv/bin/python -m unittest test_files test_sandbox test_memory test_modes test_market test_evals test_agent test_server
 ```
 
 ## Known limitations
