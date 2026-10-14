@@ -33,6 +33,7 @@ tab wait rather than interleave.
 import http.server
 import json
 import platform
+import queue
 import subprocess
 import sys
 import threading
@@ -54,6 +55,23 @@ STATE = {
     "view": None,         # modes.ModeView: prompt, schemas and registry in use
 }
 LOCK = threading.Lock()
+
+# Server-sent events: one queue per open /stream connection (one per tab).
+# A turn publishes answer text into every queue as the model streams it.
+STREAMS: list = []
+STREAMS_LOCK = threading.Lock()
+KEEPALIVE_S = 15
+
+
+def _publish(event: dict) -> None:
+    with STREAMS_LOCK:
+        for q in STREAMS:
+            q.put_nowait(event)
+
+
+def _on_token(text) -> None:
+    """agent.run_agent's callback: a piece of answer text, or None = discard."""
+    _publish({"type": "reset"} if text is None else {"type": "token", "text": text})
 
 
 # --------------------------------------------------------------------------
@@ -161,6 +179,7 @@ def _run_turn(text: str, opts: dict) -> str:
                 think=opts["think"], show_time=False,
                 # Dispatch through the mode's registry, never the global one.
                 schemas=view.schemas, registry=view.registry,
+                on_token=_on_token,
             )
     except Exception as exc:
         return f"[error] {exc}"
@@ -196,6 +215,34 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def _stream(self):
+        """Hold the connection open and forward published events as SSE.
+
+        Only answer text flows here; the final answer and trace still come
+        back from POST /chat, which stays the source of truth. A comment
+        line every KEEPALIVE_S notices a closed tab and frees its queue.
+        """
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        q = queue.Queue()
+        with STREAMS_LOCK:
+            STREAMS.append(q)
+        try:
+            while True:
+                try:
+                    data = f"data: {json.dumps(q.get(timeout=KEEPALIVE_S))}\n\n"
+                except queue.Empty:
+                    data = ": keepalive\n\n"
+                self.wfile.write(data.encode("utf-8"))
+                self.wfile.flush()
+        except OSError:      # tab closed: BrokenPipe / ConnectionReset
+            pass
+        finally:
+            with STREAMS_LOCK:
+                STREAMS.remove(q)
+
     def do_GET(self):
         if self.path == "/":
             self._send(200, PAGE, "text/html; charset=utf-8")
@@ -209,6 +256,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "turn": STATE["turn"],
                     "messages": len(STATE["messages"]),
                 }))
+        elif self.path == "/stream":
+            self._stream()
         elif self.path == "/context":
             report = agent.context_report(
                 STATE["messages"][0]["content"] if STATE["messages"] else "",
@@ -360,6 +409,19 @@ const note = document.getElementById('note');
 const state = document.getElementById('state');
 const modelEl = document.getElementById('model');
 const modeEl = document.getElementById('mode');
+
+// The answer streams in over SSE while POST /chat is still waiting. The
+// POST's reply then replaces it with the final text and the tool trace.
+const live = {el: null, text: ''};
+const events = new EventSource('/stream');
+events.onmessage = (e) => {
+  if (!live.el) return;
+  const ev = JSON.parse(e.data);
+  if (ev.type === 'token') live.text += ev.text;
+  else if (ev.type === 'reset') live.text = '';   // that reply was a tool call
+  live.el.lastChild.textContent = live.text || 'thinking…';
+  log.scrollTop = log.scrollHeight;
+};
 const input = document.getElementById('input');
 const send = document.getElementById('send');
 
@@ -420,6 +482,7 @@ async function ask(text, mode) {
   add('you', text);
   send.disabled = true;
   const pending = add('agent', 'thinking…');
+  live.el = pending; live.text = '';
   try {
     const r = await fetch('/chat', {
       method: 'POST',
@@ -427,9 +490,11 @@ async function ask(text, mode) {
       body: JSON.stringify(mode ? {text, mode} : {text})
     });
     const data = await r.json();
+    live.el = null;
     pending.remove();
     add('agent', data.answer || data.error || '(nothing)', data.trace);
   } catch (err) {
+    live.el = null;
     pending.remove();
     add('agent', 'Request failed: ' + err.message);
   }

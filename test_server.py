@@ -15,6 +15,7 @@ import http.server
 import json
 import threading
 import unittest
+import unittest.mock
 import urllib.error
 import urllib.request
 
@@ -68,6 +69,56 @@ class TestBusyTurn(unittest.TestCase):
         code, _ = self.post({"text": "hi", "mode": "evil"})
         self.assertEqual(code, 400)
         self.assertEqual(server.STATE["view"].name, "general")
+
+
+class TestStream(unittest.TestCase):
+    """GET /stream forwards what a turn publishes, as server-sent events."""
+
+    def setUp(self):
+        server._reset("general")
+        server.Handler.opts = {"model": "fake", "ctx": 16384, "think": False}
+        self.srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.base = f"http://127.0.0.1:{self.srv.server_address[1]}"
+
+    def tearDown(self):
+        self.srv.shutdown()
+        self.srv.server_close()
+
+    def open_stream(self):
+        resp = urllib.request.urlopen(self.base + "/stream", timeout=5)
+        self.assertEqual(resp.headers["Content-Type"], "text/event-stream")
+        for _ in range(100):                 # wait until the handler registered
+            if server.STREAMS:
+                return resp
+            threading.Event().wait(0.01)
+        self.fail("stream never registered")
+
+    def next_event(self, resp):
+        while True:
+            line = resp.readline().decode("utf-8").strip()
+            if line.startswith("data: "):
+                return json.loads(line[len("data: "):])
+
+    def test_tokens_and_reset_reach_the_page(self):
+        resp = self.open_stream()
+        server._on_token("Hel")
+        server._on_token(None)
+        server._on_token("lo")
+        self.assertEqual([self.next_event(resp) for _ in range(3)],
+                         [{"type": "token", "text": "Hel"}, {"type": "reset"},
+                          {"type": "token", "text": "lo"}])
+        resp.close()
+
+    def test_turn_passes_the_stream_callback_to_the_agent(self):
+        seen = {}
+        def fake_run_agent(*a, **kw):
+            seen.update(kw)
+            print("agent> done")
+        with unittest.mock.patch.object(server.agent, "run_agent", fake_run_agent):
+            server._run_turn("hi", server.Handler.opts)
+        self.assertIs(seen["on_token"], server._on_token)
+        self.assertIs(seen["registry"], server.STATE["view"].registry)
 
 
 if __name__ == "__main__":

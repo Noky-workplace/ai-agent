@@ -192,18 +192,20 @@ def general_tools() -> tuple[list, dict]:
 
 
 def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX,
-                think: bool = False, schemas: list | None = None) -> dict:
-    """One non-streaming POST to Ollama. Returns the assistant message dict.
+                think: bool = False, schemas: list | None = None,
+                on_token=None) -> dict:
+    """One POST to Ollama. Returns the complete assistant message dict.
 
-    We use stream=False here (unlike v0) because tool calls arrive as a
-    structured field, and reassembling them from stream chunks is fiddly.
-    Correctness first; you can add streaming back for the final answer later.
+    Without `on_token` (the terminal agent) this is non-streaming. With it
+    (the web UI) the request streams and each piece of answer text is passed
+    to on_token as it arrives. Either way the caller gets the whole message
+    back before acting on it, so tool calls are never run half-received.
     """
     body = {
         "model": model,
         "messages": messages,
         "tools": schemas if schemas is not None else general_tools()[0],
-        "stream": False,
+        "stream": on_token is not None,
         "options": {"num_ctx": num_ctx},
         # Qwen3 is a HYBRID REASONING model: by default it emits a long
         # internal <think> block before every answer. Those tokens are
@@ -225,8 +227,42 @@ def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX
         method="POST",
     )
     with urllib.request.urlopen(req) as resp:
+        if on_token is not None:
+            return read_stream(resp, on_token)
         body = json.loads(resp.read().decode("utf-8"))
     return body.get("message", {})
+
+
+def read_stream(lines, on_token) -> dict:
+    """Assemble a streamed /api/chat reply (one JSON object per line).
+
+    Answer text arrives in pieces and goes to on_token as it comes. Ollama
+    sends tool_calls whole, in one chunk, so they are simply collected. The
+    result has the same shape as a non-streamed message.
+    """
+    content, calls, thinking = [], [], []
+    for raw in lines:
+        raw = raw.strip()
+        if not raw:
+            continue
+        chunk = json.loads(raw)
+        if chunk.get("error"):
+            raise RuntimeError(chunk["error"])
+        msg = chunk.get("message") or {}
+        piece = msg.get("content") or ""
+        if piece:
+            content.append(piece)
+            on_token(piece)
+        thinking.append(msg.get("thinking") or "")
+        calls.extend(msg.get("tool_calls") or [])
+        if chunk.get("done"):
+            break
+    reply = {"role": "assistant", "content": "".join(content)}
+    if calls:
+        reply["tool_calls"] = calls
+    if any(thinking):
+        reply["thinking"] = "".join(thinking)
+    return reply
 
 
 def execute_tool(name: str, args: dict, registry: dict | None = None) -> str:
@@ -255,11 +291,13 @@ def execute_tool(name: str, args: dict, registry: dict | None = None) -> str:
 def run_agent(model: str, messages: list[dict], verbose: bool = True,
               num_ctx: int = DEFAULT_NUM_CTX, think: bool = False,
               show_time: bool = False, schemas: list | None = None,
-              registry: dict | None = None) -> None:
+              registry: dict | None = None, on_token=None) -> None:
     """The ReAct loop. Mutates `messages` in place so history persists.
 
     `schemas` and `registry` come from the current mode's view; None means
-    general mode's.
+    general mode's. `on_token(text)` receives answer text as it streams;
+    `on_token(None)` means "discard what was streamed": that reply turned
+    out to be a tool call, not the answer.
     """
     if schemas is None or registry is None:
         default_schemas, default_registry = general_tools()
@@ -275,7 +313,7 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
 
         try:
             t0 = time.time()
-            reply = call_ollama(model, messages, num_ctx, think, schemas)
+            reply = call_ollama(model, messages, num_ctx, think, schemas, on_token)
             elapsed = time.time() - t0
             if show_time:
                 out_chars = len(str(reply.get("content") or ""))
@@ -295,6 +333,8 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
 
         messages.append(reply)
         tool_calls = reply.get("tool_calls") or []
+        if tool_calls and on_token is not None and reply.get("content"):
+            on_token(None)
 
         if not tool_calls:
             # No tools requested -> this is the final answer.

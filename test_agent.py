@@ -14,6 +14,7 @@ with a scripted fake model, so no Ollama is needed.
 
 import contextlib
 import io
+import json
 import unittest
 from unittest import mock
 
@@ -108,6 +109,83 @@ class TestModeDispatch(unittest.TestCase):
 
     def test_finance_mode_has_12_tools(self):
         self.assertEqual(len(agent.build_view("finance").schemas), 12)
+
+
+def ndjson(*chunks):
+    """A fake streamed /api/chat body: one JSON object per line."""
+    return io.BytesIO("".join(json.dumps(c) + "\n" for c in chunks).encode("utf-8"))
+
+
+class FakeResponse(io.BytesIO):
+    """urlopen's return value; also records the request it was given."""
+
+
+class TestStreaming(unittest.TestCase):
+
+    def fake_urlopen(self, body, sent):
+        def urlopen(req, *a, **k):
+            sent.append(json.loads(req.data))
+            return FakeResponse(body.getvalue())
+        return urlopen
+
+    def test_read_stream_assembles_text_and_forwards_pieces(self):
+        pieces = []
+        reply = agent.read_stream(ndjson(
+            {"message": {"content": "Hel"}, "done": False},
+            {"message": {"content": "lo"}, "done": False},
+            {"message": {"content": ""}, "done": True},
+        ), pieces.append)
+        self.assertEqual(pieces, ["Hel", "lo"])
+        self.assertEqual(reply, {"role": "assistant", "content": "Hello"})
+
+    def test_read_stream_collects_tool_calls_whole(self):
+        call = {"function": {"name": "web_search", "arguments": {"query": "x"}}}
+        reply = agent.read_stream(ndjson(
+            {"message": {"content": "", "tool_calls": [call]}, "done": False},
+            {"message": {"content": ""}, "done": True},
+        ), lambda t: None)
+        self.assertEqual(reply["tool_calls"], [call])
+
+    def test_read_stream_raises_on_error_chunk(self):
+        with self.assertRaises(RuntimeError):
+            agent.read_stream(ndjson({"error": "model not found"}), lambda t: None)
+
+    def test_without_on_token_the_request_is_not_streamed(self):
+        """The terminal agent keeps v7's non-streaming request."""
+        sent = []
+        body = io.BytesIO(json.dumps({"message": {"content": "hi"}}).encode())
+        with mock.patch("urllib.request.urlopen", self.fake_urlopen(body, sent)):
+            reply = agent.call_ollama("m", [], schemas=[])
+        self.assertIs(sent[0]["stream"], False)
+        self.assertEqual(reply["content"], "hi")
+
+    def test_with_on_token_the_request_streams(self):
+        sent, pieces = [], []
+        body = ndjson({"message": {"content": "a"}, "done": False},
+                      {"message": {"content": "b"}, "done": True})
+        with mock.patch("urllib.request.urlopen", self.fake_urlopen(body, sent)):
+            reply = agent.call_ollama("m", [], schemas=[], on_token=pieces.append)
+        self.assertIs(sent[0]["stream"], True)
+        self.assertEqual((pieces, reply["content"]), (["a", "b"], "ab"))
+
+    def test_run_agent_resets_text_streamed_before_a_tool_call(self):
+        """Text that preceded a tool call was not the answer: discard it."""
+        events = []
+        replies = iter([
+            {"role": "assistant", "content": "Let me check.",
+             "tool_calls": [{"function": {"name": "get_current_time", "arguments": {}}}]},
+            {"role": "assistant", "content": "It is noon."},
+        ])
+        view = agent.build_view("general")
+        with mock.patch.dict(view.registry, {"get_current_time": lambda: "NOON"}), \
+                mock.patch.object(agent, "call_ollama",
+                                  side_effect=lambda *a, **k: next(replies)), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            agent.run_agent("m", [{"role": "user", "content": "time?"}],
+                            schemas=view.schemas, registry=view.registry,
+                            on_token=events.append)
+        self.assertEqual(events, [None])
+        self.assertIn("agent> It is noon.", out.getvalue())
 
 
 if __name__ == "__main__":
