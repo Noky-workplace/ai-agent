@@ -181,8 +181,18 @@ def context_report(system_prompt: str, messages: list[dict], num_ctx: int,
     )
 
 
+def general_tools() -> tuple[list, dict]:
+    """General mode's (schemas, registry): the default when a caller passes none.
+
+    Never the raw globals: those would include any tool a mode exists to hide,
+    so forgetting an argument must not widen what the model can run.
+    """
+    view = modes.apply_mode("general", "", TOOL_SCHEMAS, TOOL_REGISTRY)
+    return view.schemas, view.registry
+
+
 def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX,
-                think: bool = False, schemas: list = TOOL_SCHEMAS) -> dict:
+                think: bool = False, schemas: list | None = None) -> dict:
     """One non-streaming POST to Ollama. Returns the assistant message dict.
 
     We use stream=False here (unlike v0) because tool calls arrive as a
@@ -192,7 +202,7 @@ def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX
     body = {
         "model": model,
         "messages": messages,
-        "tools": schemas,
+        "tools": schemas if schemas is not None else general_tools()[0],
         "stream": False,
         "options": {"num_ctx": num_ctx},
         # Qwen3 is a HYBRID REASONING model: by default it emits a long
@@ -219,12 +229,15 @@ def call_ollama(model: str, messages: list[dict], num_ctx: int = DEFAULT_NUM_CTX
     return body.get("message", {})
 
 
-def execute_tool(name: str, args: dict, registry: dict = TOOL_REGISTRY) -> str:
+def execute_tool(name: str, args: dict, registry: dict | None = None) -> str:
     """Dispatch a model-requested tool call. Never trusts the model blindly.
 
     `registry` must be the current mode's, not the global one: a model that
-    names a tool its mode hides would otherwise get it executed.
+    names a tool its mode hides would otherwise get it executed. None means
+    general mode's.
     """
+    if registry is None:
+        registry = general_tools()[1]
     func = registry.get(name)
     if func is None:
         # Models sometimes hallucinate tool names. Tell it, don't crash.
@@ -241,13 +254,17 @@ def execute_tool(name: str, args: dict, registry: dict = TOOL_REGISTRY) -> str:
 
 def run_agent(model: str, messages: list[dict], verbose: bool = True,
               num_ctx: int = DEFAULT_NUM_CTX, think: bool = False,
-              show_time: bool = False, schemas: list = TOOL_SCHEMAS,
-              registry: dict = TOOL_REGISTRY) -> None:
+              show_time: bool = False, schemas: list | None = None,
+              registry: dict | None = None) -> None:
     """The ReAct loop. Mutates `messages` in place so history persists.
 
-    `schemas` and `registry` come from the current mode's view; the defaults
-    are the full v6 tool set.
+    `schemas` and `registry` come from the current mode's view; None means
+    general mode's.
     """
+    if schemas is None or registry is None:
+        default_schemas, default_registry = general_tools()
+        schemas = default_schemas if schemas is None else schemas
+        registry = default_registry if registry is None else registry
     for step in range(1, MAX_ITERATIONS + 1):
         # Trim BEFORE the request, and before the timer starts. Old tool
         # results are the most redundant thing in the context: the assistant
@@ -328,7 +345,7 @@ def mode_banner(view: modes.ModeView) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="v6 local agent: tools, file memory, papers, sandboxed code, file I/O")
+    parser = argparse.ArgumentParser(description="v7 local agent: tools, file memory, papers, sandboxed code, file I/O, modes")
     parser.add_argument("--model", default="qwen3:8b")
     parser.add_argument("--quiet", action="store_true", help="hide tool traces")
     parser.add_argument("--ctx", type=int, default=DEFAULT_NUM_CTX,

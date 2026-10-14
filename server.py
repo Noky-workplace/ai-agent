@@ -237,20 +237,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._send(400, json.dumps({"error": "empty message"}))
             return
 
-        # One conversation, one turn at a time. A second tab waits here.
+        # One conversation, one turn at a time. A second tab gets 409. The
+        # busy check, claiming the turn, and any mode switch happen under one
+        # lock hold, so a request can never reset STATE["messages"] while
+        # another turn is still appending to it.
         with LOCK:
             busy = STATE["status"] in ("thinking", "approval")
+            if not busy:
+                STATE["status"] = "thinking"
+                STATE["detail"] = ""
+                if mode and mode != STATE["view"].name:
+                    _reset(mode)
         if busy:
             self._send(409, json.dumps({"error": "a turn is already running"}))
             return
-
-        with LOCK:
-            STATE["status"] = "thinking"
-            STATE["detail"] = ""
-
-        if mode and mode != STATE["view"].name:
-            with LOCK:
-                _reset(mode)
 
         if text == "/clear":
             with LOCK:

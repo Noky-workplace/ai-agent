@@ -75,6 +75,32 @@ class TestModeDispatch(unittest.TestCase):
         result = next(m for m in messages if m["role"] == "tool")
         self.assertEqual(result["content"], "NOON")
 
+    def test_execute_tool_without_registry_never_falls_back_to_globals(self):
+        """get_prices is hidden in general mode. Planted in the global registry,
+        a caller that forgets `registry` must still not reach it."""
+        ran = []
+        with mock.patch.dict(agent.TOOL_REGISTRY,
+                             {"get_prices": lambda **kw: ran.append(kw) or "data"}):
+            out = agent.execute_tool("get_prices", {"ticker": "AAPL", "start": "2025-01-01"})
+        self.assertEqual(ran, [])
+        self.assertIn("no tool named 'get_prices'", out)
+
+    def test_run_agent_without_mode_args_uses_general_mode(self):
+        ran = []
+        replies = iter([tool_call("get_prices", ticker="AAPL", start="2025-01-01"),
+                        {"role": "assistant", "content": "ok"}])
+        messages = [{"role": "user", "content": "go"}]
+        with mock.patch.dict(agent.TOOL_REGISTRY,
+                             {"get_prices": lambda **kw: ran.append(kw) or "data"}), \
+                mock.patch.object(agent, "call_ollama",
+                                  side_effect=lambda *a, **k: next(replies)) as fake, \
+                contextlib.redirect_stdout(io.StringIO()):
+            agent.run_agent("fake", messages)
+        self.assertEqual(ran, [])
+        sent = {s["function"]["name"] for s in fake.call_args.args[4]}
+        self.assertEqual(sent, {s["function"]["name"] for s in agent.general_tools()[0]})
+        self.assertNotIn("get_prices", sent)
+
     def test_general_mode_is_the_v6_tool_set(self):
         view = agent.build_view("general")
         self.assertEqual(view.schemas, agent.TOOL_SCHEMAS)
