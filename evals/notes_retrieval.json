@@ -1,0 +1,29 @@
+{
+  "notes": {
+    "convolutional-networks.md": "# Convolutional networks\n\nConvolutional neural networks slide learned filters over an image.\nPooling layers downsample; ResNet adds skip connections so very deep stacks still train.\nUsed for image classification and object detection.\n",
+    "linear-algebra.md": "# Linear algebra\n\nEigenvalues: det(A - lambda I) = 0. Trace = sum of eigenvalues, determinant = product.\nSpectral theorem: a symmetric matrix has real eigenvalues and orthogonal eigenvectors.\nDiagonalizable when there are n independent eigenvectors.\n",
+    "backtest-0700hk-sma-crossover.md": "# backtest 0700.HK sma crossover\n\n20/50 simple moving average crossover, 2019-2024, 0.1% per side costs.\nTotal return 61%, CAGR 8.3%, max drawdown -38%.\nSharpe 0.84 vs buy-and-hold 0.61. 23 trades.\n",
+    "ta-schedule.md": "# TA schedule MATH 3332\n\nOffice hours Tuesday 15:00-17:00, room 4475.\nGrade homework within one week; post solutions after the deadline.\nTutorial slides due Monday night.\n",
+    "context-windows.md": "# Context windows\n\nOllama defaulted num_ctx to 4096 on a 16GB Mac.\nOnce the conversation filled the window, the system prompt was evicted and tool selection broke.\nFix: set num_ctx 16384 and trim old tool results first.\n",
+    "python-packaging.md": "# Python packaging\n\nOne virtual environment per project (.venv). Install with pip.\nPin exact versions in requirements.txt so a fresh clone gets the same set.\n",
+    "transformers.md": "# Transformers\n\nSelf-attention lets every token weigh every other token.\nPositional encodings add order information. Encoder-only models like BERT, decoder-only like GPT.\n",
+    "mpf-and-savings.md": "# MPF and savings\n\nMandatory Provident Fund: 5% employee + 5% employer, capped at HK$1,500 a month each.\nVoluntary contributions are tax deductible up to HK$60,000 a year.\n"
+  },
+  "queries": [
+    {"id": "r01", "query": "eigenvalues", "expect": "linear-algebra.md", "kind": "literal"},
+    {"id": "r02", "query": "Sharpe", "expect": "backtest-0700hk-sma-crossover.md", "kind": "literal"},
+    {"id": "r03", "query": "num_ctx", "expect": "context-windows.md", "kind": "literal"},
+    {"id": "r04", "query": "office hours", "expect": "ta-schedule.md", "kind": "literal"},
+    {"id": "r05", "query": "requirements.txt", "expect": "python-packaging.md", "kind": "literal"},
+    {"id": "r06", "query": "CNN", "expect": "convolutional-networks.md", "kind": "synonym"},
+    {"id": "r07", "query": "computer vision models", "expect": "convolutional-networks.md", "kind": "synonym"},
+    {"id": "r08", "query": "matrix diagonalization", "expect": "linear-algebra.md", "kind": "synonym"},
+    {"id": "r09", "query": "trading strategy performance", "expect": "backtest-0700hk-sma-crossover.md", "kind": "synonym"},
+    {"id": "r10", "query": "teaching assistant duties", "expect": "ta-schedule.md", "kind": "synonym"},
+    {"id": "r11", "query": "LLM context length limit", "expect": "context-windows.md", "kind": "synonym"},
+    {"id": "r12", "query": "dependency management", "expect": "python-packaging.md", "kind": "synonym"},
+    {"id": "r13", "query": "attention mechanism in language models", "expect": "transformers.md", "kind": "synonym"},
+    {"id": "r14", "query": "retirement savings", "expect": "mpf-and-savings.md", "kind": "synonym"},
+    {"id": "r15", "query": "pension contributions", "expect": "mpf-and-savings.md", "kind": "synonym"}
+  ]
+}

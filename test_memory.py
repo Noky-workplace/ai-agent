@@ -34,6 +34,9 @@ class MemoryTest(unittest.TestCase):
             mock.patch.object(memory, "WORKSPACE", root),
             mock.patch.object(memory, "MEMORY_FILE", self.mem_file),
             mock.patch.object(memory, "NOTES_DIR", self.notes),
+            # Literal-search tests must not reach Ollama; TestSemanticFallback
+            # turns it back on with a fake embedder.
+            mock.patch.object(memory, "SEMANTIC_FALLBACK", False),
         ]
         for p in self._patches:
             p.start()
@@ -264,6 +267,84 @@ class TestRegressions(MemoryTest):
     def test_mixed_language_words(self):
         words = memory._content_words("TA for MATH 3332 課程")
         self.assertTrue({"ta", "math", "3332", "課程"} <= words)
+
+
+_TOPICS = [("cnn", "convolutional", "image", "vision"),
+           ("eigen", "matrix", "linear"),
+           ("sharpe", "trading", "backtest")]
+
+
+def fake_embed(texts):
+    """Deterministic stand-in for Ollama: one dimension per topic group."""
+    fake_embed.calls.append(list(texts))
+    return [[float(sum(t.lower().count(w) for w in group)) + 0.01 for group in _TOPICS]
+            for t in texts]
+
+
+fake_embed.calls = []
+
+
+class TestSemanticFallback(MemoryTest):
+
+    def setUp(self):
+        super().setUp()
+        fake_embed.calls.clear()
+        for p in (mock.patch.object(memory, "SEMANTIC_FALLBACK", True),
+                  mock.patch("semantic.ollama_embed", fake_embed)):
+            p.start()
+            self._patches.append(p)
+        memory.write_note("convolutional networks", "Convolutional filters slide over the image.")
+        memory.write_note("linear algebra", "Eigenvalues of a symmetric matrix are real.")
+        memory.write_note("backtest", "Sharpe 0.84 for the trading strategy.")
+
+    def test_grep_hit_never_calls_embeddings(self):
+        out = memory.search_notes("Sharpe")
+        self.assertIn("notes/backtest.md", out)
+        self.assertNotIn("semantic", out)
+        self.assertEqual(fake_embed.calls, [])
+
+    def test_grep_miss_falls_back_to_semantic_ranking(self):
+        out = memory.search_notes("CNN")
+        self.assertIn("semantic match", out)
+        first = out.index("notes/convolutional-networks.md")
+        self.assertLess(first, out.index("notes/linear-algebra.md"))
+        self.assertIn("not literal", out)
+
+    def test_unchanged_notes_are_embedded_once(self):
+        memory.search_notes("CNN")
+        memory.search_notes("vision")
+        second = fake_embed.calls[2:]
+        self.assertEqual(len(second), 1)                 # only the query
+        self.assertTrue(second[0][0].startswith("search_query: "))
+
+    def test_edited_note_is_re_embedded(self):
+        memory.search_notes("CNN")
+        path = self.notes / "linear-algebra.md"
+        path.write_text("Eigen decomposition, edited.")
+        stat = path.stat()
+        import os
+        os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns + 10_000_000))
+        fake_embed.calls.clear()
+        memory.search_notes("CNN")
+        docs = [t for batch in fake_embed.calls for t in batch if t.startswith("search_document: ")]
+        self.assertEqual(docs, ["search_document: Eigen decomposition, edited."])
+
+    def test_ollama_failure_degrades_to_literal_miss(self):
+        def down(texts):
+            raise OSError("connection refused")
+        with mock.patch("semantic.ollama_embed", down):
+            out = memory.search_notes("CNN")
+        self.assertIn("try a different word", out)
+
+    def test_cache_is_written_under_agent_cache(self):
+        memory.search_notes("CNN")
+        self.assertTrue((memory.WORKSPACE / ".agent-cache" / "notes-embeddings.json").exists())
+
+    def test_agent_cache_is_protected_from_file_tools(self):
+        import files
+        with mock.patch.object(files, "WORKSPACE", memory.WORKSPACE):
+            with self.assertRaises(files.Refused):
+                files.contain(".agent-cache/notes-embeddings.json")
 
 
 if __name__ == "__main__":

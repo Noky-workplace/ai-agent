@@ -67,10 +67,10 @@ PLAN_MODE = False
 PROTECTED = (
     ".env", ".env.*",
     "*.pem", "*.key", "*.p12", "id_rsa*", "id_ed25519*", ".ssh",
-    ".git", ".agent-git", ".venv", "__pycache__", ".trash",
+    ".git", ".agent-git", ".agent-cache", ".venv", "__pycache__", ".trash",
     "MEMORY.md",
 )
-HIDDEN_FROM_LISTING = (".git", ".agent-git", ".venv", "__pycache__",
+HIDDEN_FROM_LISTING = (".git", ".agent-git", ".agent-cache", ".venv", "__pycache__",
                        ".trash", ".DS_Store")
 CHECKPOINT_EXCLUDE = HIDDEN_FROM_LISTING + (".env", ".env.*", "sandbox_io/")
 

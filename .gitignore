@@ -9,3 +9,4 @@ notes/
 .trash/
 .agent-git/
 sandbox_io/
+.agent-cache/

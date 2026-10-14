@@ -1,0 +1,346 @@
+{
+  "grep_only": {
+    "summary": {
+      "n": 15,
+      "accuracy": 0.3333,
+      "top1": 0.3333,
+      "synonym_top1": 0.0,
+      "literal": 1.0,
+      "synonym": 0.0,
+      "misses": [
+        "r06",
+        "r07",
+        "r08",
+        "r09",
+        "r10",
+        "r11",
+        "r12",
+        "r13",
+        "r14",
+        "r15"
+      ]
+    },
+    "records": [
+      {
+        "id": "r01",
+        "query": "eigenvalues",
+        "kind": "literal",
+        "expect": "linear-algebra.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'eigenvalues':\n\nnotes/linear-algebra.md\n  | Eigenvalues: det(A - lambda I) = 0. Trace = sum of eigenvalues, determinant = product.\n  | Spectral theorem: a symmetric matrix has real eigenvalues and orthogonal eigenvectors.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r02",
+        "query": "Sharpe",
+        "kind": "literal",
+        "expect": "backtest-0700hk-sma-crossover.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'Sharpe':\n\nnotes/backtest-0700hk-sma-crossover.md\n  | Sharpe 0.84 vs buy-and-hold 0.61. 23 trades.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r03",
+        "query": "num_ctx",
+        "kind": "literal",
+        "expect": "context-windows.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'num_ctx':\n\nnotes/context-windows.md\n  | Ollama defaulted num_ctx to 4096 on a 16GB Mac.\n  | Fix: set num_ctx 16384 and trim old tool results first.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r04",
+        "query": "office hours",
+        "kind": "literal",
+        "expect": "ta-schedule.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'office hours':\n\nnotes/ta-schedule.md\n  | Office hours Tuesday 15:00-17:00, room 4475.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r05",
+        "query": "requirements.txt",
+        "kind": "literal",
+        "expect": "python-packaging.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'requirements.txt':\n\nnotes/python-packaging.md\n  | Pin exact versions in requirements.txt so a fresh clone gets the same set.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r06",
+        "query": "CNN",
+        "kind": "synonym",
+        "expect": "convolutional-networks.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'CNN'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r07",
+        "query": "computer vision models",
+        "kind": "synonym",
+        "expect": "convolutional-networks.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'computer vision models'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r08",
+        "query": "matrix diagonalization",
+        "kind": "synonym",
+        "expect": "linear-algebra.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'matrix diagonalization'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r09",
+        "query": "trading strategy performance",
+        "kind": "synonym",
+        "expect": "backtest-0700hk-sma-crossover.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'trading strategy performance'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r10",
+        "query": "teaching assistant duties",
+        "kind": "synonym",
+        "expect": "ta-schedule.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'teaching assistant duties'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r11",
+        "query": "LLM context length limit",
+        "kind": "synonym",
+        "expect": "context-windows.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'LLM context length limit'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r12",
+        "query": "dependency management",
+        "kind": "synonym",
+        "expect": "python-packaging.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'dependency management'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r13",
+        "query": "attention mechanism in language models",
+        "kind": "synonym",
+        "expect": "transformers.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'attention mechanism in language models'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r14",
+        "query": "retirement savings",
+        "kind": "synonym",
+        "expect": "mpf-and-savings.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'retirement savings'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      },
+      {
+        "id": "r15",
+        "query": "pension contributions",
+        "kind": "synonym",
+        "expect": "mpf-and-savings.md",
+        "hit": false,
+        "top1": false,
+        "via": "none",
+        "output": "No note contains 'pension contributions'. Note that this is literal text matching, so try a different word. Available notes: backtest-0700hk-sma-crossover.md, context-windows.md, convolutional-networks.md, linear-algebra.md, mpf-and-savings.md, python-packaging.md, ta-schedule.md, transformers.md"
+      }
+    ]
+  },
+  "grep_plus_fallback": {
+    "summary": {
+      "n": 15,
+      "accuracy": 1.0,
+      "top1": 0.9333,
+      "synonym_top1": 0.9,
+      "literal": 1.0,
+      "synonym": 1.0,
+      "misses": []
+    },
+    "records": [
+      {
+        "id": "r01",
+        "query": "eigenvalues",
+        "kind": "literal",
+        "expect": "linear-algebra.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'eigenvalues':\n\nnotes/linear-algebra.md\n  | Eigenvalues: det(A - lambda I) = 0. Trace = sum of eigenvalues, determinant = product.\n  | Spectral theorem: a symmetric matrix has real eigenvalues and orthogonal eigenvectors.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r02",
+        "query": "Sharpe",
+        "kind": "literal",
+        "expect": "backtest-0700hk-sma-crossover.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'Sharpe':\n\nnotes/backtest-0700hk-sma-crossover.md\n  | Sharpe 0.84 vs buy-and-hold 0.61. 23 trades.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r03",
+        "query": "num_ctx",
+        "kind": "literal",
+        "expect": "context-windows.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'num_ctx':\n\nnotes/context-windows.md\n  | Ollama defaulted num_ctx to 4096 on a 16GB Mac.\n  | Fix: set num_ctx 16384 and trim old tool results first.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r04",
+        "query": "office hours",
+        "kind": "literal",
+        "expect": "ta-schedule.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'office hours':\n\nnotes/ta-schedule.md\n  | Office hours Tuesday 15:00-17:00, room 4475.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r05",
+        "query": "requirements.txt",
+        "kind": "literal",
+        "expect": "python-packaging.md",
+        "hit": true,
+        "top1": true,
+        "via": "grep",
+        "output": "Notes matching 'requirements.txt':\n\nnotes/python-packaging.md\n  | Pin exact versions in requirements.txt so a fresh clone gets the same set.\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r06",
+        "query": "CNN",
+        "kind": "synonym",
+        "expect": "convolutional-networks.md",
+        "hit": true,
+        "top1": false,
+        "via": "semantic",
+        "output": "No note contains 'CNN' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/transformers.md  (semantic match, score 0.62)\n  | # Transformers\n\nnotes/ta-schedule.md  (semantic match, score 0.55)\n  | # TA schedule MATH 3332\n\nnotes/convolutional-networks.md  (semantic match, score 0.54)\n  | # Convolutional networks\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r07",
+        "query": "computer vision models",
+        "kind": "synonym",
+        "expect": "convolutional-networks.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'computer vision models' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/convolutional-networks.md  (semantic match, score 0.64)\n  | # Convolutional networks\n\nnotes/transformers.md  (semantic match, score 0.57)\n  | # Transformers\n\nnotes/python-packaging.md  (semantic match, score 0.56)\n  | # Python packaging\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r08",
+        "query": "matrix diagonalization",
+        "kind": "synonym",
+        "expect": "linear-algebra.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'matrix diagonalization' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/linear-algebra.md  (semantic match, score 0.67)\n  | # Linear algebra\n\nnotes/convolutional-networks.md  (semantic match, score 0.51)\n  | # Convolutional networks\n\nnotes/backtest-0700hk-sma-crossover.md  (semantic match, score 0.49)\n  | # backtest 0700.HK sma crossover\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r09",
+        "query": "trading strategy performance",
+        "kind": "synonym",
+        "expect": "backtest-0700hk-sma-crossover.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'trading strategy performance' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/backtest-0700hk-sma-crossover.md  (semantic match, score 0.59)\n  | # backtest 0700.HK sma crossover\n\nnotes/transformers.md  (semantic match, score 0.46)\n  | # Transformers\n\nnotes/convolutional-networks.md  (semantic match, score 0.45)\n  | # Convolutional networks\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r10",
+        "query": "teaching assistant duties",
+        "kind": "synonym",
+        "expect": "ta-schedule.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'teaching assistant duties' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/ta-schedule.md  (semantic match, score 0.48)\n  | # TA schedule MATH 3332\n\nnotes/transformers.md  (semantic match, score 0.47)\n  | # Transformers\n\nnotes/linear-algebra.md  (semantic match, score 0.46)\n  | # Linear algebra\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r11",
+        "query": "LLM context length limit",
+        "kind": "synonym",
+        "expect": "context-windows.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'LLM context length limit' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/context-windows.md  (semantic match, score 0.56)\n  | # Context windows\n\nnotes/transformers.md  (semantic match, score 0.53)\n  | # Transformers\n\nnotes/ta-schedule.md  (semantic match, score 0.52)\n  | # TA schedule MATH 3332\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r12",
+        "query": "dependency management",
+        "kind": "synonym",
+        "expect": "python-packaging.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'dependency management' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/python-packaging.md  (semantic match, score 0.53)\n  | # Python packaging\n\nnotes/context-windows.md  (semantic match, score 0.53)\n  | # Context windows\n\nnotes/linear-algebra.md  (semantic match, score 0.48)\n  | # Linear algebra\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r13",
+        "query": "attention mechanism in language models",
+        "kind": "synonym",
+        "expect": "transformers.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'attention mechanism in language models' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/transformers.md  (semantic match, score 0.67)\n  | # Transformers\n\nnotes/convolutional-networks.md  (semantic match, score 0.56)\n  | # Convolutional networks\n\nnotes/linear-algebra.md  (semantic match, score 0.51)\n  | # Linear algebra\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r14",
+        "query": "retirement savings",
+        "kind": "synonym",
+        "expect": "mpf-and-savings.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'retirement savings' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/mpf-and-savings.md  (semantic match, score 0.67)\n  | # MPF and savings\n\nnotes/backtest-0700hk-sma-crossover.md  (semantic match, score 0.52)\n  | # backtest 0700.HK sma crossover\n\nnotes/context-windows.md  (semantic match, score 0.50)\n  | # Context windows\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      },
+      {
+        "id": "r15",
+        "query": "pension contributions",
+        "kind": "synonym",
+        "expect": "mpf-and-savings.md",
+        "hit": true,
+        "top1": true,
+        "via": "semantic",
+        "output": "No note contains 'pension contributions' literally. Semantic matches (similar meaning, not literal; read one to check):\n\nnotes/mpf-and-savings.md  (semantic match, score 0.67)\n  | # MPF and savings\n\nnotes/backtest-0700hk-sma-crossover.md  (semantic match, score 0.50)\n  | # backtest 0700.HK sma crossover\n\nnotes/transformers.md  (semantic match, score 0.49)\n  | # Transformers\n\nRead a full note with read_file, e.g. read_file('notes/xyz.md')"
+      }
+    ]
+  },
+  "meta": {
+    "embed_model": "nomic-embed-text",
+    "top_k": 3,
+    "timestamp": "2026-10-15T06:08:37",
+    "queries": 15,
+    "notes": 8
+  }
+}

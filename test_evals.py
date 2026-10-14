@@ -465,6 +465,18 @@ class TestChains(unittest.TestCase):
             ev.load_chains(pathlib.Path(fh.name))
 
 
+class TestNotesRetrievalEval(unittest.TestCase):
+
+    def test_grep_only_run_needs_no_ollama(self):
+        """The baseline half of the eval: literal queries hit, synonyms miss."""
+        from evals import notes_retrieval as nr
+        fixture = json.loads(nr.FIXTURE.read_text(encoding="utf-8"))
+        s = nr.summarise(nr.run(fixture, fallback=False))
+        self.assertEqual(s["literal"], 1.0)
+        self.assertEqual(s["synonym"], 0.0)
+        self.assertEqual(s["n"], 15)
+
+
 class FakeOllama(http.server.BaseHTTPRequestHandler):
     """Records the request body and answers like /api/chat."""
     received: list = []

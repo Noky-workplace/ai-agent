@@ -19,9 +19,10 @@ hundreds of files beats semantic search on predictability.
 
 The tradeoff, stated honestly: grep misses synonyms. A note titled
 "convolutional networks" will not surface for the query "CNN" unless that
-string appears in it. At personal scale that is an acceptable cost, and the
-fix is writing notes with the words you'd search for. If your notes folder
-ever reaches thousands of files, revisit embeddings.
+string appears in it. v8 adds a fallback for exactly that case: when grep
+finds nothing, semantic.py ranks notes by embedding similarity and returns
+the top few, labelled as semantic. Grep still runs first and its hits are
+never replaced (docs/adr/0004-grep-first-semantic-fallback.md).
 
 Layout:
     MEMORY.md      durable facts, injected into the system prompt every turn
@@ -33,6 +34,8 @@ import pathlib
 import re
 import unicodedata
 
+import semantic
+
 WORKSPACE = pathlib.Path.cwd().resolve()
 MEMORY_FILE = WORKSPACE / "MEMORY.md"
 NOTES_DIR = WORKSPACE / "notes"
@@ -42,6 +45,10 @@ NOTES_DIR = WORKSPACE / "notes"
 MAX_MEMORY_CHARS = 3000
 MAX_SEARCH_HITS = 8
 SNIPPET_CHARS = 160
+# When grep finds nothing, rank notes by embedding similarity (semantic.py).
+# Off = v7 behaviour; the notes-retrieval eval flips it to measure the gain.
+SEMANTIC_FALLBACK = True
+CACHE_FILE = ".agent-cache/notes-embeddings.json"
 
 MEMORY_HEADER = """# Agent Memory
 
@@ -292,6 +299,9 @@ def search_notes(query: str = "") -> str:
             hits.append((path.name, matches[:3]))
 
     if not hits:
+        semantic_out = _semantic_fallback(query, files) if SEMANTIC_FALLBACK else None
+        if semantic_out:
+            return semantic_out
         available = ", ".join(f.name for f in files)
         return (
             f"No note contains {query!r}. "
@@ -304,6 +314,35 @@ def search_notes(query: str = "") -> str:
         out.append(f"\nnotes/{name}")
         for m in matches:
             snippet = m[:SNIPPET_CHARS] + ("..." if len(m) > SNIPPET_CHARS else "")
+            out.append(f"  | {snippet}")
+    out.append("\nRead a full note with read_file, e.g. read_file('notes/xyz.md')")
+    return "\n".join(out)
+
+
+def _semantic_fallback(query: str, files: list[pathlib.Path]) -> str | None:
+    """Top notes by meaning, for a query grep missed. None if unavailable.
+
+    Any failure (Ollama down, embedding model not pulled) returns None, so
+    search_notes degrades to the plain literal-miss message.
+    """
+    try:
+        ranked = semantic.rank(query, files, WORKSPACE / CACHE_FILE)
+    except Exception:
+        return None
+    if not ranked:
+        return None
+    out = [f"No note contains {query!r} literally. Semantic matches "
+           f"(similar meaning, not literal; read one to check):"]
+    for path, score in ranked:
+        first = ""
+        try:
+            first = next((ln.strip() for ln in path.read_text(
+                encoding="utf-8", errors="replace").splitlines() if ln.strip()), "")
+        except Exception:
+            pass
+        out.append(f"\nnotes/{path.name}  (semantic match, score {score:.2f})")
+        if first:
+            snippet = first[:SNIPPET_CHARS] + ("..." if len(first) > SNIPPET_CHARS else "")
             out.append(f"  | {snippet}")
     out.append("\nRead a full note with read_file, e.g. read_file('notes/xyz.md')")
     return "\n".join(out)
