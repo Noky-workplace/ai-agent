@@ -1,0 +1,676 @@
+{
+  "chains": [
+    {
+      "id": "c01",
+      "category": "search_fetch",
+      "prompt": "Look up what Python 3.14 changed about free-threading and read the official What's New page before answering.",
+      "n_steps": 3,
+      "reached": 3,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "web_search"
+          ],
+          "got": "web_search",
+          "args": {
+            "query": "Python 3.14 free-threading changes"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 14.901,
+          "timings": {
+            "load_s": 3.7080290830000004,
+            "prompt_tokens": 1589,
+            "prompt_s": 9.510851667,
+            "gen_tokens": 29,
+            "gen_s": 1.594925541
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "fetch_url"
+          ],
+          "got": "fetch_url",
+          "args": {
+            "url": "https://docs.python.org/3/whatsnew/3.14.html"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 3.237,
+          "timings": {
+            "load_s": 0.061087041,
+            "prompt_tokens": 1750,
+            "prompt_s": 1.176976709,
+            "gen_tokens": 36,
+            "gen_s": 1.9804238770000002
+          },
+          "error": null
+        },
+        {
+          "step": 3,
+          "expect": [
+            "none"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 5.606,
+          "timings": {
+            "load_s": 0.055972375000000005,
+            "prompt_tokens": 1852,
+            "prompt_s": 0.7949740420000001,
+            "gen_tokens": 87,
+            "gen_s": 4.727392996000001
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c02",
+      "category": "search_fetch",
+      "prompt": "Find the official Ollama blog post announcing structured outputs and summarise it.",
+      "n_steps": 3,
+      "reached": 3,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "web_search"
+          ],
+          "got": "web_search",
+          "args": {
+            "query": "official Ollama blog post announcing structured outputs"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.814,
+          "timings": {
+            "load_s": 0.055842166000000006,
+            "prompt_tokens": 1580,
+            "prompt_s": 0.2160245,
+            "gen_tokens": 28,
+            "gen_s": 1.511542501
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "fetch_url"
+          ],
+          "got": "fetch_url",
+          "args": {
+            "url": "https://ollama.com/blog/structured-outputs"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 2.628,
+          "timings": {
+            "load_s": 0.075893083,
+            "prompt_tokens": 1730,
+            "prompt_s": 0.9958730840000001,
+            "gen_tokens": 29,
+            "gen_s": 1.54353029
+          },
+          "error": null
+        },
+        {
+          "step": 3,
+          "expect": [
+            "none"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 4.98,
+          "timings": {
+            "load_s": 0.045500625,
+            "prompt_tokens": 1813,
+            "prompt_s": 0.612649416,
+            "gen_tokens": 79,
+            "gen_s": 4.297479713
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c03",
+      "category": "search_fetch",
+      "prompt": "What did the HKEX announce about its new trading hours? Check the actual announcement, not just headlines.",
+      "n_steps": 3,
+      "reached": 3,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "web_search"
+          ],
+          "got": "web_search",
+          "args": {
+            "query": "HKEX new trading hours announcement"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.726,
+          "timings": {
+            "load_s": 0.044683334000000005,
+            "prompt_tokens": 1585,
+            "prompt_s": 0.396529041,
+            "gen_tokens": 25,
+            "gen_s": 1.2737314180000001
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "fetch_url"
+          ],
+          "got": "fetch_url",
+          "args": {
+            "url": "https://www.hkex.com.hk/News/News-Release/2026/260301news"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 3.658,
+          "timings": {
+            "load_s": 0.044785833000000004,
+            "prompt_tokens": 1748,
+            "prompt_s": 1.180048959,
+            "gen_tokens": 47,
+            "gen_s": 2.415936163
+          },
+          "error": null
+        },
+        {
+          "step": 3,
+          "expect": [
+            "none"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 4.998,
+          "timings": {
+            "load_s": 0.044024209,
+            "prompt_tokens": 1839,
+            "prompt_s": 0.6153222500000001,
+            "gen_tokens": 80,
+            "gen_s": 4.31346046
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c07",
+      "category": "read_edit",
+      "prompt": "In config.toml, change the server port from 8080 to 9090.",
+      "n_steps": 3,
+      "reached": 3,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "read_file"
+          ],
+          "got": "read_file",
+          "args": {
+            "path": "config.toml"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.596,
+          "timings": {
+            "load_s": 0.043754875000000006,
+            "prompt_tokens": 1586,
+            "prompt_s": 0.39970625000000004,
+            "gen_tokens": 22,
+            "gen_s": 1.142221291
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "edit_file"
+          ],
+          "got": "edit_file",
+          "args": {
+            "path": "config.toml",
+            "old_string": "port = 8080",
+            "new_string": "port = 9090"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 2.994,
+          "timings": {
+            "load_s": 0.044292583,
+            "prompt_tokens": 1662,
+            "prompt_s": 0.599666459,
+            "gen_tokens": 45,
+            "gen_s": 2.3342570840000003
+          },
+          "error": null
+        },
+        {
+          "step": 3,
+          "expect": [
+            "none"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 2.077,
+          "timings": {
+            "load_s": 0.049315875,
+            "prompt_tokens": 1734,
+            "prompt_s": 0.595007209,
+            "gen_tokens": 28,
+            "gen_s": 1.4207997920000002
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c08",
+      "category": "read_edit",
+      "prompt": "Fix the typo 'recieve' in notes/todo.md.",
+      "n_steps": 3,
+      "reached": 3,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "read_file"
+          ],
+          "got": "read_file",
+          "args": {
+            "path": "notes/todo.md"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.43,
+          "timings": {
+            "load_s": 0.04335775,
+            "prompt_tokens": 1576,
+            "prompt_s": 0.220015292,
+            "gen_tokens": 22,
+            "gen_s": 1.1401656260000002
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "edit_file"
+          ],
+          "got": "edit_file",
+          "args": {
+            "new_string": "receive",
+            "path": "notes/todo.md",
+            "old_string": "recieve"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 2.207,
+          "timings": {
+            "load_s": 0.07752391700000001,
+            "prompt_tokens": 1635,
+            "prompt_s": 0.408620792,
+            "gen_tokens": 34,
+            "gen_s": 1.707505995
+          },
+          "error": null
+        },
+        {
+          "step": 3,
+          "expect": [
+            "none"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.633,
+          "timings": {
+            "load_s": 0.042821417,
+            "prompt_tokens": 1696,
+            "prompt_s": 0.5961159580000001,
+            "gen_tokens": 20,
+            "gen_s": 0.9849640820000001
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c09",
+      "category": "notes_read",
+      "prompt": "What did I write in my notes about eigenvalues? Show me the full note.",
+      "n_steps": 3,
+      "reached": 3,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "search_notes"
+          ],
+          "got": "search_notes",
+          "args": {
+            "query": "eigenvalues"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.379,
+          "timings": {
+            "load_s": 0.042451917000000006,
+            "prompt_tokens": 1581,
+            "prompt_s": 0.222019667,
+            "gen_tokens": 22,
+            "gen_s": 1.1041597870000002
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "read_file"
+          ],
+          "got": "read_file",
+          "args": {
+            "path": "notes/linear-algebra.md"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.89,
+          "timings": {
+            "load_s": 0.045718167000000004,
+            "prompt_tokens": 1669,
+            "prompt_s": 0.6124305,
+            "gen_tokens": 24,
+            "gen_s": 1.220937331
+          },
+          "error": null
+        },
+        {
+          "step": 3,
+          "expect": [
+            "none"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 4.011,
+          "timings": {
+            "load_s": 0.044859792,
+            "prompt_tokens": 1763,
+            "prompt_s": 0.786951041,
+            "gen_tokens": 62,
+            "gen_s": 3.159047293
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c10",
+      "category": "notes_read",
+      "prompt": "Open my note on the SMA crossover backtest and remind me what the Sharpe ratio was.",
+      "n_steps": 3,
+      "reached": 3,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "search_notes",
+            "list_files"
+          ],
+          "got": "search_notes",
+          "args": {
+            "query": "SMA crossover backtest"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 1.462,
+          "timings": {
+            "load_s": 0.042468875,
+            "prompt_tokens": 1583,
+            "prompt_s": 0.22046741600000003,
+            "gen_tokens": 24,
+            "gen_s": 1.188911582
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "read_file"
+          ],
+          "got": "read_file",
+          "args": {
+            "path": "notes/backtest-0700hk-sma-crossover.md"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 2.556,
+          "timings": {
+            "load_s": 0.04963975,
+            "prompt_tokens": 1693,
+            "prompt_s": 0.7929941660000001,
+            "gen_tokens": 33,
+            "gen_s": 1.691137872
+          },
+          "error": null
+        },
+        {
+          "step": 3,
+          "expect": [
+            "none"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 2.014,
+          "timings": {
+            "load_s": 0.07641945800000001,
+            "prompt_tokens": 1839,
+            "prompt_s": 0.995378584,
+            "gen_tokens": 19,
+            "gen_s": 0.932641585
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c11",
+      "category": "refused_retry",
+      "prompt": "Use Python to compute the 30th Fibonacci number.",
+      "n_steps": 2,
+      "reached": 2,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "run_python"
+          ],
+          "got": "run_python",
+          "args": {
+            "code": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\nfibonacci(30)"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 4.121,
+          "timings": {
+            "load_s": 0.044843167,
+            "prompt_tokens": 1576,
+            "prompt_s": 0.21805325,
+            "gen_tokens": 75,
+            "gen_s": 3.836182957
+          },
+          "error": null
+        },
+        {
+          "step": 2,
+          "expect": [
+            "none",
+            "run_python"
+          ],
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": true,
+          "wall_s": 5.781,
+          "timings": {
+            "load_s": 0.042573417,
+            "prompt_tokens": 1695,
+            "prompt_s": 0.821979458,
+            "gen_tokens": 93,
+            "gen_s": 4.886345792
+          },
+          "error": null
+        }
+      ],
+      "hit": true
+    },
+    {
+      "id": "c12",
+      "category": "refused_retry",
+      "prompt": "Run Python to list the files in sandbox_io with their sizes.",
+      "n_steps": 2,
+      "reached": 1,
+      "steps": [
+        {
+          "step": 1,
+          "expect": [
+            "run_python"
+          ],
+          "got": "list_files",
+          "args": {
+            "path": "sandbox_io"
+          },
+          "arg_problems": [],
+          "check_problems": [],
+          "hit": false,
+          "wall_s": 1.376,
+          "timings": {
+            "load_s": 0.056993375000000006,
+            "prompt_tokens": 1577,
+            "prompt_s": 0.228172333,
+            "gen_tokens": 21,
+            "gen_s": 1.0761047080000001
+          },
+          "error": null
+        }
+      ],
+      "hit": false
+    }
+  ],
+  "skipped": [
+    "c04",
+    "c05",
+    "c06"
+  ],
+  "summary": {
+    "n": 9,
+    "chain_accuracy": 0.8889,
+    "step_accuracy": {
+      "1": 0.8889,
+      "2": 0.8889,
+      "3": 1.0
+    },
+    "step_accuracy_given_reached": {
+      "1": 0.8889,
+      "2": 1.0,
+      "3": 1.0
+    },
+    "by_category": {
+      "notes_read": 1.0,
+      "read_edit": 1.0,
+      "refused_retry": 0.5,
+      "search_fetch": 1.0
+    },
+    "failures": [
+      [
+        "step 1: run_python -> list_files",
+        1
+      ]
+    ],
+    "errors": 0,
+    "latency_s": {
+      "median": 2.381
+    }
+  },
+  "meta": {
+    "model": "qwen3:8b",
+    "mode": "general",
+    "timestamp": "2026-10-15T05:09:59",
+    "num_ctx": 16384,
+    "think": false,
+    "temperature": "0",
+    "seed": 42,
+    "runs": 1,
+    "tools": [
+      "delete_file",
+      "edit_file",
+      "extract_archive",
+      "fetch_url",
+      "get_current_time",
+      "list_files",
+      "read_file",
+      "remember",
+      "run_python",
+      "search_notes",
+      "search_papers",
+      "web_search",
+      "write_file",
+      "write_note"
+    ],
+    "cases_sha": "c48ac26da8f9",
+    "prompt_sha": "9c61a76fd1da",
+    "wall_total_s": 80.1
+  }
+}

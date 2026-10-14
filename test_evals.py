@@ -282,6 +282,152 @@ class TestCaseFile(unittest.TestCase):
             ev.load_cases(pathlib.Path(fh.name))
 
 
+CHAIN_SCHEMAS = SCHEMAS + [
+    {"type": "function", "function": {
+        "name": "fetch_url",
+        "parameters": {"type": "object", "properties": {"url": {"type": "string"}},
+                       "required": ["url"]}}},
+    {"type": "function", "function": {
+        "name": "run_python",
+        "parameters": {"type": "object", "properties": {"code": {"type": "string"}},
+                       "required": ["code"]}}},
+]
+
+
+def chain_model(replies):
+    """A fake chat() that plays replies in order and records every request."""
+    replies, seen = list(replies), []
+
+    def chat(messages, schemas):
+        seen.append([dict(m) for m in messages])
+        return replies.pop(0), {"prompt_s": 0.1, "gen_s": 0.5}
+
+    chat.seen = seen
+    return chat
+
+
+def search_fetch_chain(url_check=None):
+    step2 = {"expect": ["fetch_url"], "result": "PAGE TEXT"}
+    if url_check:
+        step2["check"] = {"equals": {"url": url_check}}
+    return {"id": "c1", "category": "search_fetch", "prompt": "look it up",
+            "steps": [{"expect": ["web_search"], "result": "1. Doc — https://a.dev/x"},
+                      step2, {"expect": ["none"]}]}
+
+
+class TestChains(unittest.TestCase):
+
+    def run_one(self, chain, replies):
+        model = chain_model(replies)
+        report = ev.run_chains([chain], model, CHAIN_SCHEMAS, "SYS", progress=None)
+        return report, model
+
+    def test_full_chain_hit_and_scripted_results_fed_back(self):
+        report, model = self.run_one(search_fetch_chain("https://a.dev/x"), [
+            tool_msg("web_search", {"query": "x"}),
+            tool_msg("fetch_url", {"url": "https://a.dev/x"}),
+            text_msg("answer"),
+        ])
+        r = report["chains"][0]
+        self.assertTrue(r["hit"])
+        self.assertEqual(report["summary"]["chain_accuracy"], 1.0)
+        # Step 2's request carries the call and the scripted result as role:tool.
+        step2 = model.seen[1]
+        self.assertEqual(step2[-2]["role"], "assistant")
+        self.assertEqual(step2[-2]["tool_calls"][0]["function"]["name"], "web_search")
+        self.assertEqual(step2[-1], {"role": "tool", "name": "web_search",
+                                     "content": "1. Doc — https://a.dev/x"})
+        self.assertEqual(model.seen[2][-1]["content"], "PAGE TEXT")
+
+    def test_miss_ends_the_chain_and_later_steps_count_as_misses(self):
+        report, model = self.run_one(search_fetch_chain(), [text_msg("from memory")])
+        r = report["chains"][0]
+        self.assertFalse(r["hit"])
+        self.assertEqual(r["reached"], 1)
+        self.assertEqual(len(model.seen), 1)          # never asked for step 2
+        s = report["summary"]
+        self.assertEqual(s["step_accuracy"], {"1": 0.0, "2": 0.0, "3": 0.0})
+        self.assertEqual(s["step_accuracy_given_reached"]["2"], None)
+        self.assertEqual(s["failures"], [("step 1: web_search -> none", 1)])
+
+    def test_wrong_link_fails_the_fetch_step(self):
+        report, _ = self.run_one(search_fetch_chain("https://a.dev/x"), [
+            tool_msg("web_search", {"query": "x"}),
+            tool_msg("fetch_url", {"url": "https://other.dev/"}),
+        ])
+        step = report["chains"][0]["steps"][1]
+        self.assertFalse(step["hit"])
+        self.assertIn("'url' should be", step["check_problems"][0])
+        self.assertEqual(report["summary"]["step_accuracy"]["1"], 1.0)
+        self.assertEqual(report["summary"]["step_accuracy"]["2"], 0.0)
+
+    def test_old_string_must_be_copied_from_the_file(self):
+        text = "port = 8080\nworkers = 2\n"
+        chain = {"id": "c7", "category": "read_edit", "prompt": "edit",
+                 "steps": [{"expect": ["read_file"], "result": text},
+                           {"expect": ["edit_file"],
+                            "check": {"within": {"old_string": text}}}]}
+        ok, _ = self.run_one(chain, [
+            tool_msg("read_file", {"path": "c.toml"}),
+            tool_msg("edit_file", {"path": "c.toml", "old_string": "port = 8080",
+                                   "new_string": "port = 9090"})])
+        bad, _ = self.run_one(chain, [
+            tool_msg("read_file", {"path": "c.toml"}),
+            tool_msg("edit_file", {"path": "c.toml", "old_string": "port=8080",
+                                   "new_string": "port=9090"})])
+        self.assertTrue(ok["chains"][0]["hit"])
+        self.assertFalse(bad["chains"][0]["hit"])
+
+    def test_refused_call_retried_unchanged_is_a_miss(self):
+        chain = {"id": "c11", "category": "refused_retry", "prompt": "fib",
+                 "steps": [{"expect": ["run_python"], "result": "DENIED"},
+                           {"expect": ["none", "run_python"], "check": {"forbid_repeat": True}}]}
+        same = tool_msg("run_python", {"code": "print(1)"})
+        repeat, _ = self.run_one(chain, [same, same])
+        changed, _ = self.run_one(chain, [same, tool_msg("run_python", {"code": "print(2)"})])
+        explained, _ = self.run_one(chain, [same, text_msg("I would compute...")])
+        self.assertFalse(repeat["chains"][0]["hit"])
+        self.assertTrue(changed["chains"][0]["hit"])
+        self.assertTrue(explained["chains"][0]["hit"])
+
+    def test_chain_skipped_when_a_step_tool_is_missing(self):
+        chain = {"id": "c4", "category": "prices", "prompt": "p",
+                 "steps": [{"expect": ["get_prices"], "result": "r"},
+                           {"expect": ["run_python"]}]}
+        report, model = self.run_one(chain, [])
+        self.assertEqual(report["skipped"], ["c4"])
+        self.assertEqual(report["summary"]["n"], 0)
+        self.assertEqual(model.seen, [])
+
+    def test_request_error_is_recorded_not_raised(self):
+        def chat(messages, schemas):
+            raise RuntimeError("HTTP 500")
+        report = ev.run_chains([search_fetch_chain()], chat, CHAIN_SCHEMAS, "SYS", progress=None)
+        step = report["chains"][0]["steps"][0]
+        self.assertEqual(step["got"], ev.ERROR)
+        self.assertEqual(report["summary"]["errors"], 1)
+
+    def test_shipped_chains_parse_and_name_real_tools(self):
+        from tools import TOOL_SCHEMAS
+        import modes
+        known = {s["function"]["name"] for s in TOOL_SCHEMAS + modes.extra_schemas()}
+        known.add(ev.NO_TOOL)
+        chains = ev.load_chains()
+        self.assertGreaterEqual(len(chains), 12)
+        for c in chains:
+            for s in c["steps"]:
+                for tool in s["expect"]:
+                    self.assertIn(tool, known, f"chain {c['id']} expects unknown {tool!r}")
+
+    def test_non_final_step_without_result_rejected(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as fh:
+            fh.write(json.dumps({"id": "a", "category": "c", "prompt": "p",
+                                 "steps": [{"expect": ["web_search"]},
+                                           {"expect": ["none"]}]}) + "\n")
+        with self.assertRaisesRegex(ValueError, "scripted 'result'"):
+            ev.load_chains(pathlib.Path(fh.name))
+
+
 class FakeOllama(http.server.BaseHTTPRequestHandler):
     """Records the request body and answers like /api/chat."""
     received: list = []
