@@ -46,6 +46,7 @@ import fnmatch
 import os
 import pathlib
 import subprocess
+import sys
 import time
 import unicodedata
 
@@ -165,18 +166,20 @@ def _atomic_write(target: pathlib.Path, text: str) -> None:
 
 def _ask(title: str, lines: list[str]) -> bool:
     """Show what will happen and ask. Deny on anything but an explicit yes."""
-    print("\n" + "=" * 62)
-    print(f"  {title}")
-    print("=" * 62)
+    print("\n" + "=" * 62, file=sys.__stdout__)
+    print(f"  {title}", file=sys.__stdout__)
+    print("=" * 62, file=sys.__stdout__)
     for line in lines[:PREVIEW_LINES]:
-        print(f"  | {line}")
+        print(f"  | {line}", file=sys.__stdout__)
     if len(lines) > PREVIEW_LINES:
-        print(f"  | ... ({len(lines) - PREVIEW_LINES} more lines)")
-    print("=" * 62)
+        print(f"  | ... ({len(lines) - PREVIEW_LINES} more lines)", file=sys.__stdout__)
+    print("=" * 62, file=sys.__stdout__)
     try:
-        answer = input("  Allow? [y/N] ").strip().lower()
+        # input()'s own prompt would go to the redirected sys.stdout.
+        print("  Allow? [y/N] ", end="", flush=True, file=sys.__stdout__)
+        answer = input().strip().lower()
     except (EOFError, KeyboardInterrupt):
-        print()
+        print(file=sys.__stdout__)
         return False
     return answer in ("y", "yes")
 

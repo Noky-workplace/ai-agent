@@ -88,16 +88,18 @@ def _clean_stderr(text: str) -> str:
 
 def _ask_approval(code: str) -> bool:
     """Show the code and ask the human. Deny on anything but an explicit yes."""
-    print("\n" + "=" * 62)
-    print("  The agent wants to run this Python code:")
-    print("=" * 62)
+    print("\n" + "=" * 62, file=sys.__stdout__)
+    print("  The agent wants to run this Python code:", file=sys.__stdout__)
+    print("=" * 62, file=sys.__stdout__)
     for line in code.splitlines():
-        print(f"  | {line}")
-    print("=" * 62)
+        print(f"  | {line}", file=sys.__stdout__)
+    print("=" * 62, file=sys.__stdout__)
     try:
-        answer = input("  Run it? [y/N] ").strip().lower()
+        # input()'s own prompt would go to the redirected sys.stdout.
+        print("  Run it? [y/N] ", end="", flush=True, file=sys.__stdout__)
+        answer = input().strip().lower()
     except (EOFError, KeyboardInterrupt):
-        print()
+        print(file=sys.__stdout__)
         return False
     return answer in ("y", "yes")
 
