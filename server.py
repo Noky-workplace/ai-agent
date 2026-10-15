@@ -42,6 +42,7 @@ import webbrowser
 import agent
 import files
 import modes
+import turn_trace
 from memory import load_memory
 
 HOST, PORT = "127.0.0.1", 8765
@@ -179,7 +180,7 @@ def _run_turn(text: str, opts: dict) -> str:
                 think=opts["think"], show_time=False,
                 # Dispatch through the mode's registry, never the global one.
                 schemas=view.schemas, registry=view.registry,
-                on_token=_on_token,
+                on_token=_on_token, mode=view.name,
             )
     except Exception as exc:
         return f"[error] {exc}"
@@ -515,10 +516,13 @@ def main() -> None:
     p.add_argument("--plan", action="store_true",
                    help="plan mode: file writes/edits/deletes are refused")
     p.add_argument("--mode", default="general", choices=list(modes.MODES))
+    p.add_argument("--no-trace", action="store_true",
+                   help="don't append turns to .agent-cache/traces.jsonl")
     p.add_argument("--port", type=int, default=PORT)
     args = p.parse_args()
 
     files.PLAN_MODE = args.plan
+    turn_trace.ENABLED = not args.no_trace
     _wrap_approvals()
 
     _reset(args.mode)

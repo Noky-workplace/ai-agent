@@ -22,6 +22,12 @@ import urllib.request
 import server
 
 
+
+def setUpModule():
+    # These tests drive run_agent; keep them out of the real trace log.
+    import turn_trace
+    turn_trace.ENABLED = False
+
 class TestBusyTurn(unittest.TestCase):
 
     def setUp(self):

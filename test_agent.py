@@ -26,6 +26,12 @@ def tool_call(name, **args):
             "tool_calls": [{"function": {"name": name, "arguments": args}}]}
 
 
+
+def setUpModule():
+    # These tests drive run_agent; keep them out of the real trace log.
+    import turn_trace
+    turn_trace.ENABLED = False
+
 class TestModeDispatch(unittest.TestCase):
 
     def run_scripted(self, view, replies):

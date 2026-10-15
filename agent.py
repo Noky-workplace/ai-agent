@@ -32,6 +32,7 @@ import urllib.request
 from memory import load_memory
 import files
 import modes
+import turn_trace
 from tools import TOOL_REGISTRY, TOOL_SCHEMAS
 import readline  # noqa: F401 — enables arrow-key history in input()
 
@@ -291,19 +292,36 @@ def execute_tool(name: str, args: dict, registry: dict | None = None) -> str:
 def run_agent(model: str, messages: list[dict], verbose: bool = True,
               num_ctx: int = DEFAULT_NUM_CTX, think: bool = False,
               show_time: bool = False, schemas: list | None = None,
-              registry: dict | None = None, on_token=None) -> None:
+              registry: dict | None = None, on_token=None,
+              mode: str = "general") -> None:
     """The ReAct loop. Mutates `messages` in place so history persists.
 
     `schemas` and `registry` come from the current mode's view; None means
     general mode's. `on_token(text)` receives answer text as it streams;
     `on_token(None)` means "discard what was streamed": that reply turned
     out to be a tool call, not the answer.
+
+    Each turn appends one line to the local trace log (trace.py): the prompt
+    and the shape of the tool calls, never their arguments or results.
     """
     if schemas is None or registry is None:
         default_schemas, default_registry = general_tools()
         schemas = default_schemas if schemas is None else schemas
         registry = default_registry if registry is None else registry
+    prompt = next((m.get("content", "") for m in reversed(messages)
+                   if m.get("role") == "user"), "")
+    turn = turn_trace.TurnTrace(prompt, mode, model)
+    try:
+        _loop(model, messages, verbose, num_ctx, think, show_time,
+              schemas, registry, on_token, turn)
+    finally:
+        turn.write()
+
+
+def _loop(model, messages, verbose, num_ctx, think, show_time,
+          schemas, registry, on_token, turn) -> None:
     for step in range(1, MAX_ITERATIONS + 1):
+        turn.record["steps"] = step
         # Trim BEFORE the request, and before the timer starts. Old tool
         # results are the most redundant thing in the context: the assistant
         # turn that consumed them already distilled what mattered.
@@ -322,13 +340,16 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:500]
             print(f"[error] Ollama returned HTTP {exc.code}: {detail}", file=sys.stderr)
+            turn.record["ollama_error"] = True
             return
         except urllib.error.URLError:
             print("[error] Can't reach Ollama at localhost:11434. Is it running?",
                   file=sys.stderr)
+            turn.record["ollama_error"] = True
             return
         except Exception as exc:
             print(f"[error] Ollama call failed: {exc}", file=sys.stderr)
+            turn.record["ollama_error"] = True
             return
 
         messages.append(reply)
@@ -360,6 +381,7 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
                 print(f"  [{step}] -> {name}({pretty})")
 
             result = execute_tool(name, args, registry)
+            turn.call(name, args, result)
 
             if verbose:
                 preview = result.replace("\n", " ")[:110]
@@ -368,6 +390,7 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
             # role="tool" is how the model learns what happened.
             messages.append({"role": "tool", "name": name, "content": result})
 
+    turn.record["max_iterations_hit"] = True
     print(f"agent> [stopped after {MAX_ITERATIONS} steps without a final answer]\n")
 
 
@@ -397,10 +420,13 @@ def main() -> None:
                         help="print seconds per Ollama call")
     parser.add_argument("--plan", action="store_true",
                     help="plan mode: file writes/edits/deletes are refused")
+    parser.add_argument("--no-trace", action="store_true",
+                        help="don't append turns to .agent-cache/traces.jsonl")
     parser.add_argument("--mode", default="general", choices=list(modes.MODES),
                         help="project mode: tool subset + skill file (default general)")
     args = parser.parse_args()
     files.PLAN_MODE = args.plan
+    turn_trace.ENABLED = not args.no_trace
 
     view = build_view(args.mode)
     system_prompt = view.prompt
@@ -460,7 +486,7 @@ def main() -> None:
         messages.append({"role": "user", "content": user_input})
         run_agent(args.model, messages, verbose=not args.quiet,
                   num_ctx=args.ctx, think=args.think, show_time=args.time,
-                  schemas=view.schemas, registry=view.registry)
+                  schemas=view.schemas, registry=view.registry, mode=view.name)
 
 
 if __name__ == "__main__":

@@ -87,6 +87,9 @@ per turn (`evals/results/20261015-prefix-cache-qwen3_8b-general.txt`).
 (HTTP 412, needs a newer Ollama). The default model stays `qwen3:8b` until
 that run exists.
 
+**Real-use traces.** Each turn appends one line (prompt, tool names, argument names, outcomes; never values or results) to the git-ignored `.agent-cache/traces.jsonl`; `--no-trace` turns it off.
+`python3 -m evals.mine_traces` prints errored, denied, stuck or suspicious no-tool turns as draft cases with an empty `expect`, for you to check before adding any to `cases.jsonl`.
+
 ### Modes (`modes.py`, `skills/`)
 
 A mode is a fixed tool subset plus a skill file appended to the system prompt,
