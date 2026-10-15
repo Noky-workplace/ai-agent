@@ -301,7 +301,7 @@ def run_agent(model: str, messages: list[dict], verbose: bool = True,
     `on_token(None)` means "discard what was streamed": that reply turned
     out to be a tool call, not the answer.
 
-    Each turn appends one line to the local trace log (trace.py): the prompt
+    Each turn appends one line to the local trace log (turn_trace.py): the prompt
     and the shape of the tool calls, never their arguments or results.
     """
     if schemas is None or registry is None:
