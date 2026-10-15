@@ -98,7 +98,7 @@ chosen once per session (`--mode`, `/mode`, or a web UI button):
 | Mode | Tools | Adds |
 |---|---|---|
 | `general` | the 14 above | nothing (identical to v6) |
-| `finance` | 12 | `get_prices` (Yahoo Finance via optional `yfinance`, CSV into `sandbox_io/data/`), backtest rules |
+| `finance` | 12 | `get_prices` (Yahoo Finance via optional `yfinance`, CSV into `sandbox_io/data/`); no skill text, since it made the model skip tools (`skills/finance.md` kept, off) |
 | `math3332` | 12 | TA-prep rules |
 
 The model is sent only the mode's schemas, and tool calls dispatch only

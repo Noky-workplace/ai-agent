@@ -61,9 +61,13 @@ class TestModes(unittest.TestCase):
         self.assertNotIn("delete_file", n)
 
     def test_skill_is_appended_after_base_prompt(self):
-        v = self.view("finance")
-        self.assertTrue(v.prompt.startswith("BASE\n\n--- Mode: finance ---\n"))
-        self.assertIn("No lookahead", v.prompt)
+        v = self.view("math3332")
+        self.assertTrue(v.prompt.startswith("BASE\n\n--- Mode: math3332 ---\n"))
+        self.assertIn("MATH 3332", v.prompt)
+
+    def test_finance_mode_has_no_skill_text(self):
+        """Measured choice: the skill text cost finance mode tool calls."""
+        self.assertEqual(self.view("finance").prompt, "BASE")
 
     def test_include_order_is_preserved(self):
         """Order is part of the prompt, so it's fixed per mode — a stable

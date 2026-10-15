@@ -73,7 +73,12 @@ MODES = {
             "get_prices", "run_python", "read_file", "list_files", "write_file",
             "write_note", "search_notes", "remember",
         ),
-        skill="finance.md",
+        # No skill text: with skills/finance.md appended, qwen3:8b answered
+        # several finance prompts without calling a tool; without it, finance
+        # mode scored 100% on cases, holdout_hard and chains (eval ablation,
+        # 17ce18c). The file is kept: set skill="finance.md" to bring back
+        # its backtest and honesty rules.
+        skill="",
     ),
     "math3332": Mode(
         name="math3332",
