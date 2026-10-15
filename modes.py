@@ -116,7 +116,8 @@ def load_skill(filename: str) -> str:
     return path.read_text(encoding="utf-8").strip() if path.exists() else ""
 
 
-def apply_mode(name: str, base_prompt: str, schemas: list, registry: dict) -> ModeView:
+def apply_mode(name: str, base_prompt: str, schemas: list, registry: dict,
+               with_skill: bool = True) -> ModeView:
     """Return the prompt, schemas and registry for a mode.
 
     Tools the mode lists but this checkout lacks are dropped and reported in
@@ -159,7 +160,9 @@ def apply_mode(name: str, base_prompt: str, schemas: list, registry: dict) -> Mo
     chosen_names = {s["function"]["name"] for s in chosen}
     reg = {k: v for k, v in all_registry.items() if k in chosen_names}
 
-    skill = load_skill(mode.skill)
+    # with_skill=False keeps the tool subset but drops the skill text, so an
+    # eval can tell which of the two changes the model's behaviour.
+    skill = load_skill(mode.skill) if with_skill else ""
     prompt = base_prompt
     if skill:
         prompt = f"{base_prompt}\n\n--- Mode: {mode.name} ---\n{skill}"

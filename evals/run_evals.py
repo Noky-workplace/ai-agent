@@ -639,7 +639,7 @@ def compare(a: dict, b: dict) -> str:
 # CLI
 # --------------------------------------------------------------------------
 
-def _load_tools_and_prompt(mode: str, with_memory: bool):
+def _load_tools_and_prompt(mode: str, with_memory: bool, with_skill: bool = True):
     """The exact prompt and tool list the agent would send in this mode.
 
     Imported late so `--compare` and `--list` work without the agent's deps.
@@ -655,7 +655,7 @@ def _load_tools_and_prompt(mode: str, with_memory: bool):
         if mode != "general":
             raise SystemExit("modes.py not found — cannot use --mode")
         return prompt, list(TOOL_SCHEMAS)
-    view = modes.apply_mode(mode, prompt, TOOL_SCHEMAS, TOOL_REGISTRY)
+    view = modes.apply_mode(mode, prompt, TOOL_SCHEMAS, TOOL_REGISTRY, with_skill=with_skill)
     return view.prompt, view.schemas
 
 
@@ -668,6 +668,7 @@ def _meta(args, schemas, prompt, source: pathlib.Path, t0: float) -> dict:
         "think": args.think,
         "temperature": args.temperature,
         "seed": args.seed,
+        "skill": not args.no_skill,
         "runs": args.runs,
         "tools": sorted(schema_index(schemas)),
         "cases_sha": file_sha(source),
@@ -681,6 +682,8 @@ def _save(report: dict, args, suffix: str = "") -> None:
     out.mkdir(parents=True, exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     safe_model = args.model.replace(":", "_").replace("/", "_")
+    if args.no_skill:
+        suffix = "-noskill" + suffix
     path = out / f"{stamp}-{safe_model}-{args.mode}{suffix}.json"
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nsaved {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}")
@@ -697,7 +700,7 @@ def _main_chains(args) -> int:
             print(f"{c['id']:<5} {c['category']:<14} "
                   f"{' -> '.join(s['expect'][0] for s in c['steps']):<40} {c['prompt']}")
         return 0
-    prompt, schemas = _load_tools_and_prompt(args.mode, args.with_memory)
+    prompt, schemas = _load_tools_and_prompt(args.mode, args.with_memory, not args.no_skill)
     temperature = None if args.temperature == "model" else float(args.temperature)
     chat = make_ollama_chat(args.model, args.ctx, args.think, temperature, args.seed, url=args.url)
     print(f"{len(chains)} chains, model {args.model}, mode {args.mode}, {len(schemas)} tools")
@@ -722,6 +725,8 @@ def main(argv=None) -> int:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--only", default="", help="comma-separated case ids or categories")
     p.add_argument("--cases", default=str(CASES_FILE))
+    p.add_argument("--no-skill", action="store_true",
+                   help="use the mode's tool subset without its skill text (ablation)")
     p.add_argument("--with-memory", action="store_true",
                    help="include MEMORY.md in the prompt (less reproducible)")
     p.add_argument("--out", default=str(RESULTS_DIR))
@@ -748,7 +753,7 @@ def main(argv=None) -> int:
             print(f"{c['id']:<5} {c['category']:<10} {'/'.join(c['expect']):<28} {c['prompt']}")
         return 0
 
-    prompt, schemas = _load_tools_and_prompt(args.mode, args.with_memory)
+    prompt, schemas = _load_tools_and_prompt(args.mode, args.with_memory, not args.no_skill)
     temperature = None if args.temperature == "model" else float(args.temperature)
     chat = make_ollama_chat(args.model, args.ctx, args.think, temperature, args.seed, url=args.url)
 

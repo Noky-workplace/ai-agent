@@ -92,6 +92,13 @@ class TestModes(unittest.TestCase):
         for name in modes.MODES:
             self.assertLessEqual(len(self.view(name).schemas), 14, name)
 
+    def test_without_skill_the_prompt_is_the_base_prompt(self):
+        for name in modes.MODES:
+            v = modes.apply_mode(name, "BASE", TOOL_SCHEMAS, TOOL_REGISTRY, with_skill=False)
+            self.assertEqual(v.prompt, "BASE", name)
+            # The tool subset is unchanged: only the skill text is dropped.
+            self.assertEqual(names(v.schemas), names(self.view(name).schemas), name)
+
     def test_every_referenced_skill_file_exists(self):
         for mode in modes.MODES.values():
             if mode.skill:

@@ -1,0 +1,601 @@
+{
+  "cases": [
+    {
+      "id": "z01",
+      "category": "time",
+      "prompt": "今日幾號？",
+      "expect": [
+        "get_current_time"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.333,
+          "timings": {
+            "load_s": 0.040484625,
+            "prompt_tokens": 1476,
+            "prompt_s": 0.29775375000000004,
+            "gen_tokens": 17,
+            "gen_s": 0.9736308340000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z02",
+      "category": "web",
+      "prompt": "幫我搵下最新嘅 Ollama 消息",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "latest Ollama news"
+          },
+          "arg_problems": [],
+          "wall_s": 1.817,
+          "timings": {
+            "load_s": 0.057114000000000005,
+            "prompt_tokens": 1486,
+            "prompt_s": 0.296016167,
+            "gen_tokens": 24,
+            "gen_s": 1.453161791
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z03",
+      "category": "math",
+      "prompt": "計一下 123 乘 456",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "123 * 456"
+          },
+          "arg_problems": [],
+          "wall_s": 2.074,
+          "timings": {
+            "load_s": 0.042324375000000004,
+            "prompt_tokens": 1484,
+            "prompt_s": 0.32046775,
+            "gen_tokens": 27,
+            "gen_s": 1.700720044
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z04",
+      "category": "memory",
+      "prompt": "記住我鍾意用繁體中文回答",
+      "expect": [
+        "remember"
+      ],
+      "answers": [
+        {
+          "got": "remember",
+          "args": {
+            "fact": "The user prefers answers in traditional Chinese."
+          },
+          "arg_problems": [],
+          "wall_s": 1.995,
+          "timings": {
+            "load_s": 0.041912625,
+            "prompt_tokens": 1483,
+            "prompt_s": 0.354239791,
+            "gen_tokens": 26,
+            "gen_s": 1.588459877
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z05",
+      "category": "notes",
+      "prompt": "幫我儲存呢段筆記：特徵值係 det(A - λI) = 0 嘅根",
+      "expect": [
+        "write_note"
+      ],
+      "answers": [
+        {
+          "got": "write_note",
+          "args": {
+            "content": "特徵值係 det(A - λI) = 0 嘅根。",
+            "topic": "線性代數"
+          },
+          "arg_problems": [],
+          "wall_s": 3.907,
+          "timings": {
+            "load_s": 0.041586000000000005,
+            "prompt_tokens": 1498,
+            "prompt_s": 0.5858769580000001,
+            "gen_tokens": 46,
+            "gen_s": 3.2600246260000003
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z06",
+      "category": "notes",
+      "prompt": "我之前有冇寫過關於回測嘅筆記？",
+      "expect": [
+        "search_notes"
+      ],
+      "answers": [
+        {
+          "got": "search_notes",
+          "args": {
+            "query": "回測"
+          },
+          "arg_problems": [],
+          "wall_s": 1.808,
+          "timings": {
+            "load_s": 0.053111708,
+            "prompt_tokens": 1487,
+            "prompt_s": 0.461613166,
+            "gen_tokens": 21,
+            "gen_s": 1.284485786
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z07",
+      "category": "files",
+      "prompt": "打開 README.md 睇下",
+      "expect": [
+        "read_file"
+      ],
+      "answers": [
+        {
+          "got": "read_file",
+          "args": {
+            "path": "README.md"
+          },
+          "arg_problems": [],
+          "wall_s": 1.619,
+          "timings": {
+            "load_s": 0.041853625000000005,
+            "prompt_tokens": 1480,
+            "prompt_s": 0.298042583,
+            "gen_tokens": 21,
+            "gen_s": 1.270027083
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z08",
+      "category": "papers",
+      "prompt": "搵下關於 transformer 注意力機制嘅論文",
+      "expect": [
+        "search_papers"
+      ],
+      "answers": [
+        {
+          "got": "search_papers",
+          "args": {
+            "query": "transformer attention mechanism",
+            "source": "arxiv"
+          },
+          "arg_problems": [],
+          "wall_s": 2.323,
+          "timings": {
+            "load_s": 0.04303325,
+            "prompt_tokens": 1485,
+            "prompt_s": 0.32094062500000003,
+            "gen_tokens": 31,
+            "gen_s": 1.947930254
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z09",
+      "category": "market",
+      "prompt": "下載騰訊 0700.HK 2024 年嘅股價",
+      "expect": [
+        "get_prices"
+      ],
+      "answers": [
+        {
+          "got": "get_prices",
+          "args": {
+            "end": "2024-12-31",
+            "interval": "1d",
+            "ticker": "0700.HK",
+            "start": "2024-01-01"
+          },
+          "arg_problems": [],
+          "wall_s": 4.51,
+          "timings": {
+            "load_s": 0.041314834,
+            "prompt_tokens": 1493,
+            "prompt_s": 0.6006985,
+            "gen_tokens": 62,
+            "gen_s": 3.8497372930000004
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "z10",
+      "category": "no_tool",
+      "prompt": "你好！",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 0.925,
+          "timings": {
+            "load_s": 0.042588459,
+            "prompt_tokens": 1474,
+            "prompt_s": 0.33885975,
+            "gen_tokens": 9,
+            "gen_s": 0.537632125
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y01",
+      "category": "web",
+      "prompt": "What's the population of Hong Kong?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "population of Hong Kong"
+          },
+          "arg_problems": [],
+          "wall_s": 1.74,
+          "timings": {
+            "load_s": 0.042768916000000004,
+            "prompt_tokens": 1480,
+            "prompt_s": 0.31579,
+            "gen_tokens": 23,
+            "gen_s": 1.372644876
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y02",
+      "category": "papers",
+      "prompt": "Look up the 2017 'Attention Is All You Need' paper and tell me its main idea.",
+      "expect": [
+        "search_papers",
+        "web_search",
+        "fetch_url"
+      ],
+      "answers": [
+        {
+          "got": "search_papers",
+          "args": {
+            "query": "Attention Is All You Need",
+            "source": "arxiv"
+          },
+          "arg_problems": [],
+          "wall_s": 2.586,
+          "timings": {
+            "load_s": 0.042316333000000005,
+            "prompt_tokens": 1495,
+            "prompt_s": 0.615399125,
+            "gen_tokens": 32,
+            "gen_s": 1.9162142910000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y03",
+      "category": "math",
+      "prompt": "How many seconds are in a leap year?",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "leap_year_seconds = 366 * 24 * 60 * 60\nleap_year_seconds"
+          },
+          "arg_problems": [],
+          "wall_s": 3.228,
+          "timings": {
+            "load_s": 0.041840959000000004,
+            "prompt_tokens": 1481,
+            "prompt_s": 0.31850166700000004,
+            "gen_tokens": 45,
+            "gen_s": 2.853203997
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y04",
+      "category": "memory",
+      "prompt": "Note down that my tutorial is every Tuesday at 3pm.",
+      "expect": [
+        "remember"
+      ],
+      "answers": [
+        {
+          "got": "remember",
+          "args": {
+            "fact": "My tutorial is every Tuesday at 3pm."
+          },
+          "arg_problems": [],
+          "wall_s": 2.114,
+          "timings": {
+            "load_s": 0.042542667,
+            "prompt_tokens": 1485,
+            "prompt_s": 0.33665991700000003,
+            "gen_tokens": 28,
+            "gen_s": 1.7242286640000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y05",
+      "category": "edit",
+      "prompt": "Add a line 'v8: chains' to the end of CHANGELOG.md.",
+      "expect": [
+        "read_file"
+      ],
+      "answers": [
+        {
+          "got": "read_file",
+          "args": {
+            "path": "CHANGELOG.md"
+          },
+          "arg_problems": [],
+          "wall_s": 1.722,
+          "timings": {
+            "load_s": 0.042129791,
+            "prompt_tokens": 1489,
+            "prompt_s": 0.32242570800000003,
+            "gen_tokens": 22,
+            "gen_s": 1.348848625
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y06",
+      "category": "notes",
+      "prompt": "Is there anything in my notes folder at all?",
+      "expect": [
+        "search_notes",
+        "list_files"
+      ],
+      "answers": [
+        {
+          "got": "list_files",
+          "args": {
+            "path": "notes"
+          },
+          "arg_problems": [],
+          "wall_s": 1.65,
+          "timings": {
+            "load_s": 0.0405395,
+            "prompt_tokens": 1482,
+            "prompt_s": 0.319680625,
+            "gen_tokens": 20,
+            "gen_s": 1.28013004
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y07",
+      "category": "fetch",
+      "prompt": "Check whether https://example.com is up.",
+      "expect": [
+        "fetch_url"
+      ],
+      "answers": [
+        {
+          "got": "fetch_url",
+          "args": {
+            "url": "https://example.com"
+          },
+          "arg_problems": [],
+          "wall_s": 1.783,
+          "timings": {
+            "load_s": 0.046523167000000004,
+            "prompt_tokens": 1481,
+            "prompt_s": 0.30576275,
+            "gen_tokens": 23,
+            "gen_s": 1.421220082
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "y08",
+      "category": "no_tool",
+      "prompt": "Explain the difference between TCP and UDP.",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 22.217,
+          "timings": {
+            "load_s": 0.040982708,
+            "prompt_tokens": 1481,
+            "prompt_s": 0.310718,
+            "gen_tokens": 330,
+            "gen_s": 21.782159705
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    }
+  ],
+  "skipped": [],
+  "summary": {
+    "n": 18,
+    "runs": 1,
+    "accuracy": 1.0,
+    "strict_accuracy": 1.0,
+    "consistency": null,
+    "arg_validity": 1.0,
+    "errors": 0,
+    "by_category": {
+      "edit": 1.0,
+      "fetch": 1.0,
+      "files": 1.0,
+      "market": 1.0,
+      "math": 1.0,
+      "memory": 1.0,
+      "no_tool": 1.0,
+      "notes": 1.0,
+      "papers": 1.0,
+      "time": 1.0,
+      "web": 1.0
+    },
+    "by_expected_tool": {
+      "fetch_url": 1.0,
+      "get_current_time": 1.0,
+      "get_prices": 1.0,
+      "none": 1.0,
+      "read_file": 1.0,
+      "remember": 1.0,
+      "run_python": 1.0,
+      "search_notes": 1.0,
+      "search_papers": 1.0,
+      "web_search": 1.0,
+      "write_note": 1.0
+    },
+    "top_confusions": [],
+    "latency_s": {
+      "mean": 3.2973,
+      "median": 1.906,
+      "max": 22.217
+    },
+    "prompt_eval_s_median": 0.321,
+    "gen_tok_per_s_median": 16.3
+  },
+  "meta": {
+    "model": "qwen3:8b",
+    "mode": "finance",
+    "timestamp": "2026-10-15T07:45:47",
+    "num_ctx": 16384,
+    "think": false,
+    "temperature": "0",
+    "seed": 42,
+    "skill": false,
+    "runs": 1,
+    "tools": [
+      "fetch_url",
+      "get_current_time",
+      "get_prices",
+      "list_files",
+      "read_file",
+      "remember",
+      "run_python",
+      "search_notes",
+      "search_papers",
+      "web_search",
+      "write_file",
+      "write_note"
+    ],
+    "cases_sha": "2db50f668539",
+    "prompt_sha": "9c61a76fd1da",
+    "wall_total_s": 59.4
+  }
+}
