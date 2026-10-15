@@ -132,6 +132,39 @@ class TestWriter(TraceTest):
             agent.main()
         self.assertFalse(turn_trace.ENABLED)
 
+    def test_failed_python_code_is_a_code_error(self):
+        failed = "stderr:\nZeroDivisionError: division by zero\n\nexit code: 1"
+        registry = {"run_python": lambda **kw: failed}
+        self.run_turn([tool_call("run_python", code="1/0"),
+                       {"role": "assistant", "content": "oops"}], registry)
+        [t] = self.lines()
+        self.assertEqual(t["calls"][0]["outcome"], "code_error")
+
+    def test_outcome_labels(self):
+        self.assertEqual(turn_trace.outcome("stdout:\n42", "run_python"), "ok")
+        self.assertEqual(turn_trace.outcome("stdout:\nhi\n\nexit code: 2", "run_python"), "code_error")
+        self.assertEqual(turn_trace.outcome("stdout:\nexit code: 0", "run_python"), "ok")
+        # Only run_python reports exit codes; text in another tool's result isn't one.
+        self.assertEqual(turn_trace.outcome("note says exit code: 1", "read_file"), "ok")
+        self.assertEqual(turn_trace.outcome("DENIED: declined", "run_python"), "denied")
+        self.assertEqual(turn_trace.outcome("Error: code too long", "run_python"), "error")
+
+    def test_file_is_capped_keeping_the_newest_lines(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text("".join(f'{{"n": {i}}}\n' for i in range(turn_trace.MAX_LINES)))
+        self.run_turn([{"role": "assistant", "content": "hi"}], {}, prompt="newest")
+        lines = self.path.read_text().splitlines()
+        self.assertEqual(len(lines), turn_trace.KEEP_LINES)
+        self.assertEqual(json.loads(lines[-1])["prompt"], "newest")
+        self.assertEqual(json.loads(lines[0])["n"], turn_trace.MAX_LINES - turn_trace.KEEP_LINES + 1)
+        self.assertFalse(list(self.path.parent.glob(".*.tmp")))
+
+    def test_file_under_the_cap_is_untouched(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text('{"n": 0}\n' * 10)
+        self.run_turn([{"role": "assistant", "content": "hi"}], {})
+        self.assertEqual(len(self.path.read_text().splitlines()), 11)
+
     def test_trace_file_is_protected_from_file_tools(self):
         with self.assertRaises(files.Refused):
             files.contain(turn_trace.TRACE_FILE)
@@ -158,9 +191,11 @@ class TestMiner(unittest.TestCase):
             turn("loop forever", [("web_search", "ok")], max_iterations_hit=True),
             turn("what's the latest Python?"),
             turn("今日恒指點？"),
+            turn("plot my returns", [("run_python", "code_error")]),
         )
         notes = [c["note"] for c in cases]
-        self.assertEqual(len(cases), 5)
+        self.assertEqual(len(cases), 6)
+        self.assertIn("run_python code failed", notes[5])
         self.assertIn("tool error", notes[0])
         self.assertIn("denied", notes[1])
         self.assertIn("max iterations", notes[2])

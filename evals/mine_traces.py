@@ -12,6 +12,7 @@ the agent's own mistakes.
 
 A turn is a candidate when it shows one of:
   - a tool call that returned an error
+  - run_python code that exited non-zero (the tool worked; the code failed)
   - a tool call the user denied
   - MAX_ITERATIONS hit without a final answer
   - no tool at all, for a prompt that sounds time-sensitive
@@ -37,6 +38,8 @@ def triggers(turn: dict) -> list[str]:
     outcomes = [c.get("outcome") for c in turn.get("calls", [])]
     if "error" in outcomes:
         found.append("tool error")
+    if "code_error" in outcomes:
+        found.append("run_python code failed")
     if "denied" in outcomes:
         found.append("denied")
     if turn.get("max_iterations_hit"):
