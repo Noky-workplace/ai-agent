@@ -1,0 +1,25 @@
+== general mode
+A: qwen3:8b (2026-10-15T23:08:43)
+B: qwen3.5:9b (2026-10-15T23:13:58)
+common cases 44
+accuracy 100.0% -> 97.7%  (-2.3 pts)
+median latency 1.551s -> 1.782s
+
+REGRESSED (1)
+  o06   none -> remember   (expected none/search_notes)
+
+== finance mode
+A: qwen3:8b (2026-10-15T23:11:02)
+B: qwen3.5:9b (2026-10-15T23:17:59)
+common cases 44
+accuracy 95.5% -> 97.7%  (+2.3 pts)
+median latency 1.861s -> 3.097s
+
+fixed (2)
+  q04   get_current_time -> get_prices
+  w05   none -> web_search
+
+REGRESSED (1)
+  o06   none -> remember   (expected none/search_notes)
+
+peak 'ollama ps' size for qwen3.5:9b during the runs: 16 GB (16 GB machine, num_ctx 16384, mlx engine)

@@ -1,0 +1,1362 @@
+{
+  "cases": [
+    {
+      "id": "t01",
+      "category": "time",
+      "prompt": "What's today's date?",
+      "expect": [
+        "get_current_time"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 28.81,
+          "timings": {
+            "load_s": 13.214717458,
+            "prompt_tokens": 2011,
+            "prompt_s": 14.360138041,
+            "gen_tokens": 14,
+            "gen_s": 1.208570709
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "t02",
+      "category": "time",
+      "prompt": "What day of the week is it?",
+      "expect": [
+        "get_current_time"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 14.094,
+          "timings": {
+            "load_s": 0.0004485,
+            "prompt_tokens": 2013,
+            "prompt_s": 13.154761167,
+            "gen_tokens": 14,
+            "gen_s": 0.933487625
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "t03",
+      "category": "time",
+      "prompt": "How many days are left until Christmas?",
+      "expect": [
+        "get_current_time",
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "get_current_time",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 14.049,
+          "timings": {
+            "load_s": 0.006423375,
+            "prompt_tokens": 2013,
+            "prompt_s": 13.223180333,
+            "gen_tokens": 14,
+            "gen_s": 0.814448291
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "w01",
+      "category": "web",
+      "prompt": "Who won the most recent Formula 1 race?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "most recent Formula 1 race winner"
+          },
+          "arg_problems": [],
+          "wall_s": 1.469,
+          "timings": {
+            "load_s": 0.005430666000000001,
+            "prompt_tokens": 2015,
+            "prompt_s": 0.2713125,
+            "gen_tokens": 31,
+            "gen_s": 1.18779875
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "w02",
+      "category": "web",
+      "prompt": "What's the price of Bitcoin right now?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "Bitcoin price today"
+          },
+          "arg_problems": [],
+          "wall_s": 1.334,
+          "timings": {
+            "load_s": 0.006778208000000001,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.20584925,
+            "gen_tokens": 27,
+            "gen_s": 1.1167147080000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "w03",
+      "category": "web",
+      "prompt": "Any news about Ollama this week?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "Ollama news this week"
+          },
+          "arg_problems": [],
+          "wall_s": 1.228,
+          "timings": {
+            "load_s": 0.006775416,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.201444167,
+            "gen_tokens": 30,
+            "gen_s": 1.016236584
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "w04",
+      "category": "web",
+      "prompt": "What is the current USD to HKD exchange rate?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "USD to HKD exchange rate today"
+          },
+          "arg_problems": [],
+          "wall_s": 1.305,
+          "timings": {
+            "load_s": 0.000466875,
+            "prompt_tokens": 2016,
+            "prompt_s": 0.205537708,
+            "gen_tokens": 31,
+            "gen_s": 1.0955785
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "w05",
+      "category": "web",
+      "prompt": "What's the weather in Hong Kong right now?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "Hong Kong weather today"
+          },
+          "arg_problems": [],
+          "wall_s": 1.224,
+          "timings": {
+            "load_s": 0.006679875,
+            "prompt_tokens": 2015,
+            "prompt_s": 0.230866125,
+            "gen_tokens": 28,
+            "gen_s": 0.9831135830000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "w06",
+      "category": "web",
+      "prompt": "Who is the current CEO of OpenAI?",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "current CEO of OpenAI"
+          },
+          "arg_problems": [],
+          "wall_s": 1.251,
+          "timings": {
+            "load_s": 0.006172667000000001,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.223913792,
+            "gen_tokens": 29,
+            "gen_s": 1.0168658750000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "w07",
+      "category": "web",
+      "prompt": "Search for the latest Ollama release notes and read the full page.",
+      "expect": [
+        "web_search"
+      ],
+      "answers": [
+        {
+          "got": "web_search",
+          "args": {
+            "query": "Ollama latest release notes"
+          },
+          "arg_problems": [],
+          "wall_s": 1.298,
+          "timings": {
+            "load_s": 0.0064284170000000005,
+            "prompt_tokens": 2020,
+            "prompt_s": 0.22536187500000002,
+            "gen_tokens": 30,
+            "gen_s": 1.063249042
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "p01",
+      "category": "papers",
+      "prompt": "Find recent papers on observation masking for LLM agents.",
+      "expect": [
+        "search_papers"
+      ],
+      "answers": [
+        {
+          "got": "search_papers",
+          "args": {
+            "query": "observation masking LLM agents"
+          },
+          "arg_problems": [],
+          "wall_s": 1.332,
+          "timings": {
+            "load_s": 0.000882334,
+            "prompt_tokens": 2016,
+            "prompt_s": 0.22720537500000001,
+            "gen_tokens": 29,
+            "gen_s": 1.100541625
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "p02",
+      "category": "papers",
+      "prompt": "Are there any studies on retrieval-augmented generation for math problems?",
+      "expect": [
+        "search_papers"
+      ],
+      "answers": [
+        {
+          "got": "search_papers",
+          "args": {
+            "query": "retrieval augmented generation math problems"
+          },
+          "arg_problems": [],
+          "wall_s": 1.476,
+          "timings": {
+            "load_s": 0.007142333000000001,
+            "prompt_tokens": 2019,
+            "prompt_s": 0.22428466700000002,
+            "gen_tokens": 31,
+            "gen_s": 1.240488834
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "p03",
+      "category": "papers",
+      "prompt": "Look up the most cited papers on the transformer attention mechanism.",
+      "expect": [
+        "search_papers"
+      ],
+      "answers": [
+        {
+          "got": "search_papers",
+          "args": {
+            "query": "transformer attention mechanism most cited",
+            "source": "arxiv"
+          },
+          "arg_problems": [],
+          "wall_s": 1.785,
+          "timings": {
+            "load_s": 0.007713958000000001,
+            "prompt_tokens": 2017,
+            "prompt_s": 0.277237291,
+            "gen_tokens": 43,
+            "gen_s": 1.4965940000000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "m01",
+      "category": "math",
+      "prompt": "What is 4837 times 2913?",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "print(4837 * 2913)"
+          },
+          "arg_problems": [],
+          "wall_s": 1.545,
+          "timings": {
+            "load_s": 0.006523875,
+            "prompt_tokens": 2019,
+            "prompt_s": 0.23845054200000002,
+            "gen_tokens": 38,
+            "gen_s": 1.2962
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "m02",
+      "category": "math",
+      "prompt": "Compute the eigenvalues of the matrix [[2, 1], [1, 3]].",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "import numpy as np\n\nmatrix = np.array([[2, 1], [1, 3]])\neigenvalues = np.linalg.eigvals(matrix)\nprint(\"Eigenvalues:\", eigenvalues)"
+          },
+          "arg_problems": [],
+          "wall_s": 2.744,
+          "timings": {
+            "load_s": 0.001768583,
+            "prompt_tokens": 2024,
+            "prompt_s": 0.241593875,
+            "gen_tokens": 67,
+            "gen_s": 2.497554375
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "m03",
+      "category": "math",
+      "prompt": "Is 1000003 a prime number?",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "def is_prime(n):\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n\nprint(is_prime(1000003))"
+          },
+          "arg_problems": [],
+          "wall_s": 6.12,
+          "timings": {
+            "load_s": 0.008558291,
+            "prompt_tokens": 2018,
+            "prompt_s": 0.24244216700000001,
+            "gen_tokens": 141,
+            "gen_s": 5.864260584
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "m04",
+      "category": "math",
+      "prompt": "What is the standard deviation of 3, 7, 7, 19, 24?",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "import statistics\n\ndata = [3, 7, 7, 19, 24]\nstd_dev = statistics.stdev(data)\nprint(f\"Standard deviation: {std_dev}\")"
+          },
+          "arg_problems": [],
+          "wall_s": 2.997,
+          "timings": {
+            "load_s": 0.010906208,
+            "prompt_tokens": 2028,
+            "prompt_s": 0.277386625,
+            "gen_tokens": 67,
+            "gen_s": 2.6999656250000004
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "m05",
+      "category": "math",
+      "prompt": "Convert 37 degrees Celsius to Fahrenheit.",
+      "expect": [
+        "run_python"
+      ],
+      "answers": [
+        {
+          "got": "run_python",
+          "args": {
+            "code": "celsius = 37\nfahrenheit = celsius * 9/5 + 32\nprint(f\"{celsius}°C = {fahrenheit}°F\")"
+          },
+          "arg_problems": [],
+          "wall_s": 2.876,
+          "timings": {
+            "load_s": 0.005864500000000001,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.261810959,
+            "gen_tokens": 63,
+            "gen_s": 2.6051878750000004
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "r01",
+      "category": "files",
+      "prompt": "Show me what's in README.md.",
+      "expect": [
+        "read_file"
+      ],
+      "answers": [
+        {
+          "got": "read_file",
+          "args": {
+            "path": "README.md"
+          },
+          "arg_problems": [],
+          "wall_s": 1.305,
+          "timings": {
+            "load_s": 0.004018417,
+            "prompt_tokens": 2013,
+            "prompt_s": 0.270984917,
+            "gen_tokens": 25,
+            "gen_s": 1.027277709
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "r02",
+      "category": "files",
+      "prompt": "Open requirements.txt and tell me the dependencies.",
+      "expect": [
+        "read_file"
+      ],
+      "answers": [
+        {
+          "got": "read_file",
+          "args": {
+            "path": "requirements.txt"
+          },
+          "arg_problems": [],
+          "wall_s": 1.253,
+          "timings": {
+            "load_s": 0.00043537500000000005,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.264641083,
+            "gen_tokens": 25,
+            "gen_s": 0.9835789170000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "r03",
+      "category": "files",
+      "prompt": "What files are in this project?",
+      "expect": [
+        "list_files"
+      ],
+      "answers": [
+        {
+          "got": "list_files",
+          "args": {
+            "path": "."
+          },
+          "arg_problems": [],
+          "wall_s": 1.372,
+          "timings": {
+            "load_s": 0.000384375,
+            "prompt_tokens": 2012,
+            "prompt_s": 0.463342958,
+            "gen_tokens": 24,
+            "gen_s": 0.902477375
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "r04",
+      "category": "files",
+      "prompt": "List everything in the notes folder.",
+      "expect": [
+        "list_files",
+        "search_notes"
+      ],
+      "answers": [
+        {
+          "got": "list_files",
+          "args": {
+            "path": "notes"
+          },
+          "arg_problems": [],
+          "wall_s": 1.248,
+          "timings": {
+            "load_s": 0.0003935,
+            "prompt_tokens": 2012,
+            "prompt_s": 0.264491833,
+            "gen_tokens": 24,
+            "gen_s": 0.9802840840000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "x01",
+      "category": "edit",
+      "prompt": "Create a file called todo.md with a heading that says Tasks.",
+      "expect": [
+        "write_file"
+      ],
+      "answers": [
+        {
+          "got": "write_file",
+          "args": {
+            "path": "todo.md",
+            "content": "# Tasks\n"
+          },
+          "arg_problems": [],
+          "wall_s": 1.88,
+          "timings": {
+            "load_s": 0.000414416,
+            "prompt_tokens": 2018,
+            "prompt_s": 0.268606291,
+            "gen_tokens": 39,
+            "gen_s": 1.6074598750000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "x02",
+      "category": "edit",
+      "prompt": "In notes/plan.md, change 'deadline: Friday' to 'deadline: Monday'.",
+      "expect": [
+        "edit_file",
+        "read_file"
+      ],
+      "answers": [
+        {
+          "got": "read_file",
+          "args": {
+            "path": "notes/plan.md"
+          },
+          "arg_problems": [],
+          "wall_s": 2.587,
+          "timings": {
+            "load_s": 0.002323875,
+            "prompt_tokens": 2023,
+            "prompt_s": 0.272584333,
+            "gen_tokens": 54,
+            "gen_s": 2.3091679160000003
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "x03",
+      "category": "edit",
+      "prompt": "Fix the typo 'recieve' in README.md.",
+      "expect": [
+        "read_file",
+        "edit_file"
+      ],
+      "answers": [
+        {
+          "got": "read_file",
+          "args": {
+            "path": "README.md"
+          },
+          "arg_problems": [],
+          "wall_s": 1.359,
+          "timings": {
+            "load_s": 0.001404208,
+            "prompt_tokens": 2016,
+            "prompt_s": 0.286821125,
+            "gen_tokens": 25,
+            "gen_s": 1.0675567910000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "x04",
+      "category": "edit",
+      "prompt": "Delete the file old_draft.txt.",
+      "expect": [
+        "delete_file"
+      ],
+      "answers": [
+        {
+          "got": "delete_file",
+          "args": {
+            "path": "old_draft.txt"
+          },
+          "arg_problems": [],
+          "wall_s": 1.369,
+          "timings": {
+            "load_s": 0.001380958,
+            "prompt_tokens": 2012,
+            "prompt_s": 0.27603862500000004,
+            "gen_tokens": 27,
+            "gen_s": 1.0881755830000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "x05",
+      "category": "edit",
+      "prompt": "Overwrite scratch.txt with the text hello.",
+      "expect": [
+        "write_file"
+      ],
+      "answers": [
+        {
+          "got": "write_file",
+          "args": {
+            "path": "scratch.txt",
+            "content": "hello"
+          },
+          "arg_problems": [],
+          "wall_s": 2.092,
+          "timings": {
+            "load_s": 0.00041566700000000004,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.276941208,
+            "gen_tokens": 38,
+            "gen_s": 1.810273542
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "a01",
+      "category": "archive",
+      "prompt": "Unzip data.zip so I can analyse it.",
+      "expect": [
+        "extract_archive"
+      ],
+      "answers": [
+        {
+          "got": "extract_archive",
+          "args": {
+            "path": "data.zip"
+          },
+          "arg_problems": [],
+          "wall_s": 1.891,
+          "timings": {
+            "load_s": 0.007869583000000001,
+            "prompt_tokens": 2015,
+            "prompt_s": 0.33278250000000004,
+            "gen_tokens": 26,
+            "gen_s": 1.3810428750000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "a02",
+      "category": "archive",
+      "prompt": "Extract the contents of results.tar.gz.",
+      "expect": [
+        "extract_archive"
+      ],
+      "answers": [
+        {
+          "got": "extract_archive",
+          "args": {
+            "path": "results.tar.gz"
+          },
+          "arg_problems": [],
+          "wall_s": 2.284,
+          "timings": {
+            "load_s": 0.001144875,
+            "prompt_tokens": 2013,
+            "prompt_s": 0.29476475,
+            "gen_tokens": 27,
+            "gen_s": 1.9797965000000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "k01",
+      "category": "memory",
+      "prompt": "Remember that I prefer answers in Traditional Chinese.",
+      "expect": [
+        "remember"
+      ],
+      "answers": [
+        {
+          "got": "remember",
+          "args": {
+            "fact": "用戶偏好答案以繁體中文呈現"
+          },
+          "arg_problems": [],
+          "wall_s": 2.05,
+          "timings": {
+            "load_s": 0.032745167,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.213650375,
+            "gen_tokens": 31,
+            "gen_s": 1.7722968330000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "k02",
+      "category": "memory",
+      "prompt": "My exam is on December 3rd, please keep that in mind.",
+      "expect": [
+        "remember"
+      ],
+      "answers": [
+        {
+          "got": "remember",
+          "args": {
+            "fact": "User has an exam on December 3rd"
+          },
+          "arg_problems": [],
+          "wall_s": 3.11,
+          "timings": {
+            "load_s": 0.000710584,
+            "prompt_tokens": 2020,
+            "prompt_s": 0.394297375,
+            "gen_tokens": 33,
+            "gen_s": 2.70857275
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "k03",
+      "category": "memory",
+      "prompt": "I'm a TA for MATH 3332 this semester, remember that.",
+      "expect": [
+        "remember"
+      ],
+      "answers": [
+        {
+          "got": "remember",
+          "args": {
+            "fact": "User is a TA for MATH 3332 this semester"
+          },
+          "arg_problems": [],
+          "wall_s": 2.361,
+          "timings": {
+            "load_s": 0.014091792,
+            "prompt_tokens": 2023,
+            "prompt_s": 0.371977208,
+            "gen_tokens": 38,
+            "gen_s": 1.946898958
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "n01",
+      "category": "notes",
+      "prompt": "Save these lecture notes on eigenvalues: an eigenvector v of A satisfies Av = λv, and the eigenvalues are the roots of det(A - λI) = 0.",
+      "expect": [
+        "write_note"
+      ],
+      "answers": [
+        {
+          "got": "write_note",
+          "args": {
+            "topic": "eigenvalues",
+            "content": "An eigenvector v of A satisfies Av = λv, and the eigenvalues are the roots of det(A - λI) = 0."
+          },
+          "arg_problems": [],
+          "wall_s": 5.633,
+          "timings": {
+            "load_s": 0.0023524170000000003,
+            "prompt_tokens": 2044,
+            "prompt_s": 0.911555125,
+            "gen_tokens": 70,
+            "gen_s": 4.674981584
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "n02",
+      "category": "notes",
+      "prompt": "Save a note on context windows: Ollama defaulted num_ctx to 4096 on 16GB, and evicting the system prompt broke tool selection.",
+      "expect": [
+        "write_note"
+      ],
+      "answers": [
+        {
+          "got": "write_note",
+          "args": {
+            "topic": "context windows",
+            "content": "Ollama defaulted num_ctx to 4096 on 16GB, and evicting the system prompt broke tool selection."
+          },
+          "arg_problems": [],
+          "wall_s": 3.824,
+          "timings": {
+            "load_s": 0.026581666,
+            "prompt_tokens": 2041,
+            "prompt_s": 0.790645959,
+            "gen_tokens": 67,
+            "gen_s": 2.989604416
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "n03",
+      "category": "notes",
+      "prompt": "What did I save about eigenvectors?",
+      "expect": [
+        "search_notes"
+      ],
+      "answers": [
+        {
+          "got": "search_notes",
+          "args": {
+            "query": "eigenvectors"
+          },
+          "arg_problems": [],
+          "wall_s": 1.595,
+          "timings": {
+            "load_s": 0.0005672920000000001,
+            "prompt_tokens": 2014,
+            "prompt_s": 0.279609708,
+            "gen_tokens": 27,
+            "gen_s": 1.3099271670000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "n04",
+      "category": "notes",
+      "prompt": "Do I have any notes on Seatbelt sandboxing?",
+      "expect": [
+        "search_notes"
+      ],
+      "answers": [
+        {
+          "got": "search_notes",
+          "args": {
+            "query": "Seatbelt sandboxing"
+          },
+          "arg_problems": [],
+          "wall_s": 1.646,
+          "timings": {
+            "load_s": 0.008485083000000001,
+            "prompt_tokens": 2016,
+            "prompt_s": 0.327712166,
+            "gen_tokens": 27,
+            "gen_s": 1.304529458
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "f01",
+      "category": "fetch",
+      "prompt": "Read this article and summarise it: https://example.com/post",
+      "expect": [
+        "fetch_url"
+      ],
+      "answers": [
+        {
+          "got": "fetch_url",
+          "args": {
+            "url": "https://example.com/post"
+          },
+          "arg_problems": [],
+          "wall_s": 1.779,
+          "timings": {
+            "load_s": 0.000435125,
+            "prompt_tokens": 2018,
+            "prompt_s": 0.281990083,
+            "gen_tokens": 29,
+            "gen_s": 1.4921697500000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "f02",
+      "category": "fetch",
+      "prompt": "What does https://docs.python.org/3/library/tarfile.html say about extraction filters?",
+      "expect": [
+        "fetch_url"
+      ],
+      "answers": [
+        {
+          "got": "fetch_url",
+          "args": {
+            "url": "https://docs.python.org/3/library/tarfile.html"
+          },
+          "arg_problems": [],
+          "wall_s": 2.013,
+          "timings": {
+            "load_s": 0.005995792000000001,
+            "prompt_tokens": 2024,
+            "prompt_s": 0.28688908300000004,
+            "gen_tokens": 36,
+            "gen_s": 1.7133117500000001
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "o01",
+      "category": "no_tool",
+      "prompt": "Hi!",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.051,
+          "timings": {
+            "load_s": 0.005143791,
+            "prompt_tokens": 2007,
+            "prompt_s": 0.600471708,
+            "gen_tokens": 9,
+            "gen_s": 0.438437666
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "o02",
+      "category": "no_tool",
+      "prompt": "Thanks, that's all for now.",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.221,
+          "timings": {
+            "load_s": 0.005774167,
+            "prompt_tokens": 2013,
+            "prompt_s": 0.253541667,
+            "gen_tokens": 20,
+            "gen_s": 0.957245667
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "o03",
+      "category": "no_tool",
+      "prompt": "Explain what a hash map is in two sentences.",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 5.06,
+          "timings": {
+            "load_s": 0.0017130420000000001,
+            "prompt_tokens": 2016,
+            "prompt_s": 0.28479854200000004,
+            "gen_tokens": 74,
+            "gen_s": 4.7684932920000005
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "o04",
+      "category": "no_tool",
+      "prompt": "Translate 'good morning' into French.",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 1.159,
+          "timings": {
+            "load_s": 0.025929459000000002,
+            "prompt_tokens": 2013,
+            "prompt_s": 0.329051875,
+            "gen_tokens": 10,
+            "gen_s": 0.798958542
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "o05",
+      "category": "no_tool",
+      "prompt": "What's the difference between a list and a tuple in Python?",
+      "expect": [
+        "none"
+      ],
+      "answers": [
+        {
+          "got": "none",
+          "args": {},
+          "arg_problems": [],
+          "wall_s": 21.816,
+          "timings": {
+            "load_s": 0.022554917,
+            "prompt_tokens": 2018,
+            "prompt_s": 0.394499833,
+            "gen_tokens": 402,
+            "gen_s": 21.3911145
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 1.0,
+      "hit": true,
+      "consistent": true
+    },
+    {
+      "id": "o06",
+      "category": "no_tool",
+      "prompt": "What's my name?",
+      "expect": [
+        "none",
+        "search_notes"
+      ],
+      "answers": [
+        {
+          "got": "remember",
+          "args": {
+            "fact": "User's name is unknown"
+          },
+          "arg_problems": [],
+          "wall_s": 2.009,
+          "timings": {
+            "load_s": 0.000408917,
+            "prompt_tokens": 2010,
+            "prompt_s": 0.40314404200000004,
+            "gen_tokens": 29,
+            "gen_s": 1.6015951670000002
+          },
+          "error": null
+        }
+      ],
+      "hit_rate": 0.0,
+      "hit": false,
+      "consistent": true
+    }
+  ],
+  "skipped": [
+    "q01",
+    "q02",
+    "q03",
+    "q04"
+  ],
+  "summary": {
+    "n": 44,
+    "runs": 1,
+    "accuracy": 0.9773,
+    "strict_accuracy": 0.9773,
+    "consistency": null,
+    "arg_validity": 1.0,
+    "errors": 0,
+    "by_category": {
+      "archive": 1.0,
+      "edit": 1.0,
+      "fetch": 1.0,
+      "files": 1.0,
+      "math": 1.0,
+      "memory": 1.0,
+      "no_tool": 0.8333,
+      "notes": 1.0,
+      "papers": 1.0,
+      "time": 1.0,
+      "web": 1.0
+    },
+    "by_expected_tool": {
+      "delete_file": 1.0,
+      "edit_file": 1.0,
+      "extract_archive": 1.0,
+      "fetch_url": 1.0,
+      "get_current_time": 1.0,
+      "list_files": 1.0,
+      "none": 0.8333,
+      "read_file": 1.0,
+      "remember": 1.0,
+      "run_python": 1.0,
+      "search_notes": 1.0,
+      "search_papers": 1.0,
+      "web_search": 1.0,
+      "write_file": 1.0,
+      "write_note": 1.0
+    },
+    "top_confusions": [
+      [
+        "none -> remember",
+        1
+      ]
+    ],
+    "latency_s": {
+      "mean": 3.6796,
+      "median": 1.782,
+      "max": 28.81
+    },
+    "prompt_eval_s_median": 0.277,
+    "gen_tok_per_s_median": 23.4
+  },
+  "meta": {
+    "model": "qwen3.5:9b",
+    "mode": "general",
+    "timestamp": "2026-10-15T23:13:58",
+    "num_ctx": 16384,
+    "think": false,
+    "temperature": "0",
+    "seed": 42,
+    "skill": true,
+    "runs": 1,
+    "tools": [
+      "delete_file",
+      "edit_file",
+      "extract_archive",
+      "fetch_url",
+      "get_current_time",
+      "list_files",
+      "read_file",
+      "remember",
+      "run_python",
+      "search_notes",
+      "search_papers",
+      "web_search",
+      "write_file",
+      "write_note"
+    ],
+    "cases_sha": "17fe19951993",
+    "prompt_sha": "9c61a76fd1da",
+    "wall_total_s": 161.9
+  }
+}
