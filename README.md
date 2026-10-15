@@ -8,6 +8,70 @@ Runs on a MacBook Air M4 via Ollama.
 - **v5** safe file I/O + Seatbelt sandbox · **v6** web UI, persistent `sandbox_io/`, tests
 - **v7** eval harness, project modes, memory fixes
 
+## Results
+
+Every design decision in this repo was made by measuring it. Tool selection is
+scored by an eval harness that never executes a tool, the numbers below come
+from committed result files under `evals/results/`, and a decision that didn't
+survive a holdout set was reverted. Model: `qwen3:8b` (Q4_K_M) via Ollama on a
+16 GB MacBook Air M4.
+
+### How it's measured
+
+- **Single-step:** 44 cases (`evals/cases.jsonl`). Does the model's first action
+  pick the right tool, or correctly none, with schema-valid arguments?
+- **Multi-step:** 10–13 chains (`evals/chains.jsonl`) with scripted tool results
+  fed back, scored per step. Checks include "copied old_string from the file" and
+  "opened the exact CSV path it was given".
+- **Holdouts, never tuned on:** 22 cases (`holdout.jsonl`) and 18 harder ones,
+  10 of them in Cantonese (`holdout_hard.jsonl`), written apart from the tuning.
+- Temperature 0, fixed seed. Three sampled runs at the model's own temperature
+  chose the same tool on every case, so a one-case change reflects the change
+  being tested, not noise.
+
+### Headline numbers
+
+| What | Result | Source |
+|---|---|---|
+| Tool selection, general mode | 95.5% → 97.7% after tightening tool descriptions; 100% after one flawed case was corrected (that run on Ollama 0.40.4) | `…033828…general.json`, `…045003…general.json`, `…230843…general.json` |
+| Argument validity | 100% in every run | all result files |
+| Holdout, never tuned on | 100% (21 of 22 cases scored in general mode), before and after the description change | `…holdout-pre5.json`, `…holdout-head.json` |
+| Hard holdout, incl. 10 Cantonese | 100% general mode (17 of 18 scored); Cantonese 9/9, English 8/8 | `…general-holdout-hard.json` |
+| Multi-step chains, general | 80% → 100% after the fixes below | `…051517…chains.json`, `…063843…chains.json` |
+| Prompt cache (system prompt + 14 schemas) | a new turn prefills in 0.221 s vs 10.631 s cold (2%) | `…prefix-cache-qwen3_8b-general.txt` |
+| Notes search, 15 queries | grep alone 33% (synonym queries 0 of 10) → grep + embedding fallback 100%, right note first 14 of 15 | `…notes-retrieval.json` |
+
+### Decisions the numbers made
+
+| Question | Evidence | Decision |
+|---|---|---|
+| Load tools on demand, or keep all 14 loaded? | The cached prefix makes the schemas cost 2% of a cold prefill per turn | Keep all loaded; add static per-project modes instead (ADR 0002) |
+| Shorter tool descriptions? | Schema tokens about −18% (estimated, commit `3ca76c3`), holdout unchanged at 100%; one shorter `run_python` description lost a case | Kept, except `run_python`, which stays longer |
+| Why does finance mode skip tools? | Ablation: with its skill text 83.3% on the hard holdout, without it 100% | The skill text is the cause; a just-in-time variant scored 88.9% and was reverted. Finance mode now runs without the skill text |
+| Upgrade to Qwen3.5-9B? | Accuracy a tie (general: 8B 100%, 9B 97.7%; finance: 8B 95.5%, 9B 97.7%). 9B is slower (median 1.55 → 1.78 s general, 1.86 → 3.10 s finance) and peaks at all 16 GB of RAM | Stay on `qwen3:8b` |
+
+### Bugs the evals and tests caught
+
+- **A safety bug in an error message.** The edit tool's "text appears twice"
+  error offered `replace_all=true` as an equal option, and the model took it,
+  which would rewrite every match. Reworded; the chain now passes.
+- **Five memory bugs**, found by writing `test_memory.py`. Two hit Chinese text
+  specifically: Chinese note topics were rejected outright, and duplicate
+  detection never fired on Chinese facts (now handled with character bigrams).
+- **A tool that was silently dead for a month.** A registry typo meant the model
+  saw `fetch_url` but nothing could run it. Modes now refuse to show any tool
+  without an implementation, and a test pins it.
+
+### Limits
+
+- One model, small sets: 44, 22 and 18 cases, plus 10–13 chains. One case is
+  about 2 points.
+- Tool choice is measured; answer quality isn't. A backtest with lookahead bias
+  would pass every eval here.
+- Built with Claude and Claude Code as collaborators (see `Co-Authored-By` in
+  the log). The decisions, reviews and measurements are traceable commit by
+  commit.
+
 ## Setup
 
 ```bash
@@ -83,9 +147,9 @@ to prefill the 1,792-token prompt cold, 0.221 s for a new turn on the same
 prefix (2%). So keeping every tool schema loaded costs once per session, not
 per turn (`evals/results/20261015-prefix-cache-qwen3_8b-general.txt`).
 
-**Qwen3.5-9B comparison: pending.** Ollama 0.18.2 cannot pull `qwen3.5:9b`
-(HTTP 412, needs a newer Ollama). The default model stays `qwen3:8b` until
-that run exists.
+**Qwen3.5-9B comparison: done** (Ollama 0.40.4). Accuracy tied, 9B was slower
+and peaked at all 16 GB of RAM, so the default stays `qwen3:8b`; see Results
+(`evals/results/20261015-compare-qwen3_8b-vs-qwen3.5_9b.txt`).
 
 **Real-use traces.** Each turn appends one line (prompt, tool names, argument names, outcomes; never values or results) to the git-ignored `.agent-cache/traces.jsonl`; `--no-trace` turns it off.
 `python3 -m evals.mine_traces` prints errored, denied, stuck or suspicious no-tool turns as draft cases with an empty `expect`, for you to check before adding any to `cases.jsonl`.
@@ -208,10 +272,11 @@ Adding a capability = one module exporting `*_TOOL_SCHEMAS` and
 
 ## Known limitations
 
-- **Tool selection is the weak point**, not tool execution. Larger models
-  (`qwen3:14b`) help if you have the RAM.
-- **`search_notes` is literal matching.** "CNN" won't find "convolutional
-  networks". Deliberate tradeoff.
+- **Tool selection is the weak point**, not tool execution. Qwen3.5-9B tied
+  on accuracy but was slower and used all 16 GB; see Results.
+- **`search_notes` greps first.** Only when grep finds nothing does it fall
+  back to embedding similarity (top 3, labelled as semantic matches), so "CNN"
+  can find "convolutional networks" (ADR 0004).
 - **Semantic Scholar rate-limits anonymous traffic.** On HTTP 429, wait or
   use `source='arxiv'`.
 - **Prompt injection is contained, not prevented.** A malicious page can
